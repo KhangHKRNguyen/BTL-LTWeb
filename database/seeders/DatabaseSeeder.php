@@ -15,11 +15,9 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
-
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
+        // Gọi file Seeder chứa bộ dữ liệu 11 bảng chạy ngầm
+        $this->call([
+            UserAndClassSeeder::class,
         ]);
     }
 }
