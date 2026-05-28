@@ -5,6 +5,8 @@ use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\Student\ResultController;
 use App\Http\Controllers\Student\FeedbackController;
+use App\Http\Controllers\Teacher\AttendanceController;
+use App\Http\Controllers\Teacher\MaterialController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -44,13 +46,12 @@ Route::middleware(['auth', 'role:student'])->prefix('student')->name('student.')
 
 Route::middleware(['auth', 'role:teacher'])->prefix('teacher')->name('teacher.')->group(function () {
     
-    Route::get('/attendance', function() { 
-        return '⏱Màn hình Điểm danh lớp học (Giáo viên phụ trách)'; 
-    })->name('attendance.index');
+    Route::get('/attendance', [AttendanceController::class, 'index'])->name('attendance.index');
+    Route::post('/attendance', [AttendanceController::class, 'store'])->name('attendance.store');
 
-    Route::get('/materials', function() { 
-        return 'Màn hình Quản lý & Upload tài liệu (Giáo viên phụ trách)'; 
-    })->name('materials.index');
+    Route::get('/materials', [MaterialController::class, 'index'])->name('materials.index');
+    Route::post('/materials', [MaterialController::class, 'store'])->name('materials.store');
+    Route::delete('/materials/{material}', [MaterialController::class, 'destroy'])->name('materials.destroy');
 
     Route::get('/assignments', function() { 
         return 'Màn hình Giao bài tập mới (Giáo viên phụ trách)'; 
