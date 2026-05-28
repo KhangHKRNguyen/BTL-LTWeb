@@ -6,9 +6,9 @@
                 📝 Xin phép nghỉ học
             </h2>
 
-            <x-input-error :messages="$errors->all()" class="mb-4" />
+         
 
-            <form action="{{ route('student.leave_requests.store') }}" method="POST">
+            <form action="{{ route('student.leave_requests.store') }}" method="POST" novalidate>
                 @csrf
 
                 <div class="mb-4">
