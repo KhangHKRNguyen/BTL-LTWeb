@@ -8,33 +8,43 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Assignment extends Model
 {
-    // 1. Khai báo các thuộc tính được phép ghi dữ liệu
+    protected $table = 'assignments';
+
     protected $fillable = [
-        'title',          // Tiêu đề bài tập
-        'description',    // Nội dung/yêu cầu bài tập
-        'due_date',       // Hạn nộp bài
-        'file_path',      // File đính kèm đề bài (nếu có)
-        'class_id',       // Mã lớp học (Khóa ngoại)
+        'title',
+        'content',
+        'type',
+        'open_time',
+        'due_time',
+        'course_class_id'
     ];
 
-    // 2. Tự động ép kiểu ngày tháng để khi dùng ở View chỉ việc định dạng ->format('d/m/Y')
     protected $casts = [
-        'due_date' => 'datetime',
+        'open_time' => 'datetime',
+        'due_time' => 'datetime',
     ];
 
     /**
-     * Mối quan hệ: Một Bài tập (Assignment) phải thuộc về một Lớp học (CourseClass)
+     * Quan hệ 1-N: Assignment có nhiều Questions (Câu hỏi)
      */
-    public function courseClass(): BelongsTo
+    public function questions(): HasMany
     {
-        return $this->belongsTo(CourseClass::class, 'course_class_id');
+        return $this->hasMany(Question::class);
     }
 
     /**
-     * Mối quan hệ: Một Bài tập (Assignment) có thể có nhiều Bài nộp (Submission) của nhiều học viên
+     * Quan hệ 1-N: Assignment có nhiều Submissions (Bài nộp)
      */
     public function submissions(): HasMany
     {
-        return $this->hasMany(Submission::class, 'assignment_id');
+        return $this->hasMany(Submission::class);
+    }
+
+    /**
+     * Quan hệ N-1: Assignment thuộc 1 CourseClass (Lớp học)
+     */
+    public function courseClass(): BelongsTo
+    {
+        return $this->belongsTo(CourseClass::class);
     }
 }

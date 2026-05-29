@@ -4,10 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Submission extends Model
 {
-    // 1. Khai báo các thuộc tính được phép ghi dữ liệu
+    protected $table = 'submissions';
+
     protected $fillable = [
         'submission_content',
         'file_path',
@@ -18,29 +20,31 @@ class Submission extends Model
         'user_id'
     ];
 
-    // 2. Ép kiểu dữ liệu
     protected $casts = [
-        'grade' => 'float',
+        'grade' => 'decimal:2',
     ];
 
     /**
-     * Mối quan hệ: Một bài nộp (Submission) sẽ thuộc về một Bài tập (Assignment)
+     * Quan hệ N-1: Submission thuộc 1 Assignment (Bài tập)
      */
     public function assignment(): BelongsTo
     {
-        return $this->belongsTo(Assignment::class, 'assignment_id');
+        return $this->belongsTo(Assignment::class);
     }
 
     /**
-     * Mối quan hệ: Một bài nộp (Submission) phải thuộc về một Người dùng/Học viên (User)
+     * Quan hệ N-1: Submission thuộc 1 User (Học viên)
      */
     public function user(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'user_id');
+        return $this->belongsTo(User::class);
     }
 
-    public function feedbacks(): \Illuminate\Database\Eloquent\Relations\HasMany
+    /**
+     * Quan hệ 1-N: Submission có nhiều StudentAnswers (Đáp án học viên)
+     */
+    public function studentAnswers(): HasMany
     {
-        return $this->hasMany(Feedback::class, 'submission_id');
+        return $this->hasMany(StudentAnswer::class);
     }
 }

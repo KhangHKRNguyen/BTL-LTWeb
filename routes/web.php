@@ -1,10 +1,13 @@
 <?php
 
 use App\Http\Controllers\ProfileController;
-use Illuminate\Support\Facades\Route;
-
+use App\Http\Controllers\Student\DashboardController;
+use App\Http\Controllers\Student\LeaveRequestController;
+use App\Http\Controllers\Student\StudyController;
+use App\Http\Controllers\Student\DoAssignmentController;
 use App\Http\Controllers\Student\ResultController;
 use App\Http\Controllers\Student\FeedbackController;
+use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     return view('welcome');
@@ -20,27 +23,32 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-
 Route::middleware(['auth', 'role:student'])->prefix('student')->name('student.')->group(function () {
     
+    Route::redirect('/', '/student/assignments')->name('dashboard');
+
     Route::get('/results', [ResultController::class, 'index'])->name('results.index');
     Route::get('/results/{id}', [ResultController::class, 'show'])->name('results.show');
     Route::post('/feedback', [ResultController::class, 'storeFeedback'])->name('feedback.store');
     Route::post('/results/{id}/feedback', [ResultController::class, 'storeFeedback'])->name('results.feedback');
 
-    Route::get('/study', function() { 
-        return 'Màn hình Lớp học & Tài liệu (Thành viên khác đang code...)'; 
-    })->name('study.index');
+    Route::prefix('leave-requests')->name('leave_requests.')->group(function () {
+        Route::get('/', [LeaveRequestController::class, 'index'])->name('index');
+        Route::get('/create', [LeaveRequestController::class, 'create'])->name('create');
+        Route::post('/', [LeaveRequestController::class, 'store'])->name('store');
+    });
 
-    Route::get('/assignments', function() { 
-        return 'Màn hình Danh sách bài tập cần làm (Thành viên khác đang code...)'; 
-    })->name('assignments.index');
+    Route::prefix('study')->name('study.')->group(function () {
+        Route::get('/', [StudyController::class, 'index'])->name('index');
+        Route::get('/download/{id}', [StudyController::class, 'downloadMaterial'])->name('download');
+    });
 
-    Route::get('/leave-requests', function() { 
-        return 'Màn hình Đơn xin nghỉ học (Thành viên khác đang code...)'; 
-    })->name('leave_requests.index');
+    Route::prefix('assignments')->name('assignments.')->group(function () {
+        Route::get('/', [DoAssignmentController::class, 'index'])->name('index');
+        Route::get('/{id}', [DoAssignmentController::class, 'show'])->name('show');
+        Route::post('/{id}', [DoAssignmentController::class, 'store'])->name('store');
+    });
 });
-
 
 Route::middleware(['auth', 'role:teacher'])->prefix('teacher')->name('teacher.')->group(function () {
     
@@ -49,7 +57,7 @@ Route::middleware(['auth', 'role:teacher'])->prefix('teacher')->name('teacher.')
     })->name('attendance.index');
 
     Route::get('/materials', function() { 
-        return 'Màn hình Quản lý & Upload tài liệu (Giáo viên phụ trách)'; 
+        return 'Màn hình Quản lý và Upload tài liệu (Giáo viên phụ trách)'; 
     })->name('materials.index');
 
     Route::get('/assignments', function() { 
@@ -57,7 +65,7 @@ Route::middleware(['auth', 'role:teacher'])->prefix('teacher')->name('teacher.')
     })->name('assignments.index');
 
     Route::get('/grades', function() { 
-        return 'Màn hình Danh sách bài nộp & Chấm điểm (Giáo viên phụ trách)'; 
+        return 'Màn hình Danh sách bài nộp và Chấm điểm (Giáo viên phụ trách)'; 
     })->name('grades.index');
 });
 
@@ -68,7 +76,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     })->name('accounts.index');
 
     Route::get('/classes', function() { 
-        return 'Màn hình Quản lý lớp học & Thành viên (Admin phụ trách)'; 
+        return 'Màn hình Quản lý lớp học và Thành viên (Admin phụ trách)'; 
     })->name('classes.index');
 });
 
