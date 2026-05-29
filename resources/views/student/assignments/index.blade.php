@@ -1,17 +1,12 @@
 <x-app-layout>
     <div class="py-6 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex flex-col md:flex-row gap-6"> 
-            
-            <div class="w-full md:w-64 flex-shrink-0">
-                <x-student-sidebar /> 
-            </div>
-
             <div class="flex-1 bg-white p-6 rounded-xl shadow-sm border border-gray-200">
                 <div class="container mt-2">
                     
                     <div class="pb-4 mb-6 border-b border-gray-100">
                         <h1 class="text-2xl font-bold text-gray-800 flex items-center">
-                            <span class="me-2">📝</span> Danh sách bài tập
+                            <span class="me-2"></span> Danh sách bài tập
                         </h1>
                     </div>
 
@@ -37,17 +32,17 @@
                                     <h5 class="text-base font-bold text-gray-800">{{ $assignment->title }}</h5>
                                     
                                     <div class="text-sm text-gray-600 space-y-1">
-                                        <p><span class="font-medium text-gray-400">🏫 Lớp:</span> <span class="text-gray-800 font-medium">{{ $assignment->courseClass->class_name }}</span></p>
+                                        <p><span class="font-medium text-gray-400">Lớp:</span> <span class="text-gray-800 font-medium">{{ $assignment->courseClass->class_name }}</span></p>
                                         
                                         <p class="flex items-center gap-2">
-                                            <span class="font-medium text-gray-400">🏷️ Loại:</span> 
+                                            <span class="font-medium text-gray-400">Loại:</span> 
                                             <span class="px-2 py-0.5 bg-cyan-50 text-cyan-700 text-xs font-semibold rounded border border-cyan-100">
                                                 {{ $assignment->type }}
                                             </span>
                                         </p>
                                         
                                         <p class="flex items-center gap-1.5">
-                                            <span class="font-medium text-gray-400">⏳ Hạn nộp:</span> 
+                                            <span class="font-medium text-gray-400">Hạn nộp:</span> 
                                             <span class="{{ ($isOverdue && $status !== 'submitted') ? 'text-red-600 font-bold' : 'text-gray-700' }}">
                                                 {{ $dueTime->format('d/m/Y H:i') }}
                                             </span>
@@ -61,7 +56,7 @@
 
                                     @if($assignment->content)
                                         <div class="text-xs text-gray-400 pt-2 border-t border-gray-100 mt-2">
-                                            <span class="font-medium text-gray-500">📖 Mô tả:</span> {{ Str::limit($assignment->content, 100) }}
+                                            <span class="font-medium text-gray-500">Mô tả:</span> {{ Str::limit($assignment->content, 100) }}
                                         </div>
                                     @endif
                                 </div>
@@ -82,7 +77,7 @@
                                     @else
                                         <div class="flex flex-wrap items-center gap-2">
                                             <span class="inline-flex items-center px-2.5 py-1 bg-emerald-50 text-emerald-700 text-xs font-bold rounded-md border border-emerald-200">
-                                                ✓ Đã nộp
+                                                Đã nộp
                                             </span>
                                             @if($userSubmission->grade !== null)
                                                 <span class="inline-flex items-center px-2.5 py-1 bg-indigo-50 text-indigo-700 text-xs font-bold rounded-md border border-indigo-200">
@@ -102,8 +97,8 @@
                             </div>
                         @empty
                             <div class="p-8 text-center border-2 border-dashed border-gray-200 rounded-xl bg-slate-50">
-                                <div class="text-4xl mb-2">🎉</div>
-                                <h3 class="text-sm font-semibold text-gray-700">Tuyệt vời! Không có bài tập</h3>
+                                <div class="text-4xl mb-2"></div>
+                                <h3 class="text-sm font-semibold text-gray-700">Không có bài tập</h3>
                                 <p class="text-xs text-gray-400 mt-1">Hiện tại bạn đã hoàn thành hoặc không có bài tập nào được giao từ giáo viên.</p>
                             </div>
                         @endforelse

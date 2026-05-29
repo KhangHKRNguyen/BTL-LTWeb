@@ -1,21 +1,16 @@
 ﻿<x-app-layout>
     <div class="py-6 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex flex-col md:flex-row gap-6"> 
-            
-            <div class="w-full md:w-64 flex-shrink-0">
-                <x-student-sidebar /> 
-            </div>
-
             <div class="flex-1 bg-white p-6 rounded-xl shadow-sm border border-gray-200">
                 <div class="container mt-2">
                     
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 pb-4 border-b border-gray-100">
                         <h1 class="text-2xl font-bold text-gray-800 flex items-center">
-                            <span class="me-2">📂</span> Danh sách đơn xin nghỉ
+                            <span class="me-2"></span> Danh sách đơn xin nghỉ
                         </h1>
                         <a href="{{ route('student.leave_requests.create') }}">
                             <x-primary-button type="button">
-                                ➕ Xin nghỉ mới
+                                Xin nghỉ
                             </x-primary-button>
                         </a>
                     </div>
@@ -34,15 +29,15 @@
                                             {{ $request->courseClass->class_name }}
                                         </span>
                                         @if($request->courseClass->room)
-                                            <span class="text-xs text-gray-400">🚪 Phòng {{ $request->courseClass->room }}</span>
+                                            <span class="text-xs text-gray-400">Phòng {{ $request->courseClass->room }}</span>
                                         @endif
                                     </div>
                                     <p class="text-sm text-gray-700">
-                                        <span class="font-medium text-gray-500">📅 Ngày xin nghỉ:</span> 
+                                        <span class="font-medium text-gray-500">Ngày xin nghỉ:</span> 
                                         <span class="font-semibold text-gray-900">{{ $request->request_date->format('d/m/Y') }}</span>
                                     </p>
                                     <p class="text-sm text-gray-700">
-                                        <span class="font-medium text-gray-500">📝 Lý do:</span> 
+                                        <span class="font-medium text-gray-500">Lý do:</span> 
                                         <span class="italic text-gray-800">"{{ $request->reason }}"</span>
                                     </p>
                                     <p class="text-xs text-gray-400 pt-1 flex items-center gap-1">
@@ -59,7 +54,6 @@
                             </div>
                         @empty
                             <div class="p-8 text-center border-2 border-dashed border-gray-200 rounded-xl bg-slate-50">
-                                <div class="text-4xl mb-2">📥</div>
                                 <h3 class="text-sm font-semibold text-gray-700">Chưa có đơn xin nghỉ nào</h3>
                                 <p class="text-xs text-gray-400 mt-1 mb-4">Mọi đơn đăng ký xin phép nghỉ học của bạn sẽ hiển thị tập trung tại đây.</p>
                                 <a href="{{ route('student.leave_requests.create') }}" class="text-xs font-bold text-blue-600 hover:text-blue-700 underline">

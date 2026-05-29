@@ -15,30 +15,67 @@
                 LMS SYSTEM
             </div>
             <nav class="flex-1 p-4 space-y-1">
-                <a href="/dashboard" class="flex items-center px-4 py-2.5 rounded-lg hover:bg-slate-800 hover:text-white transition">
-                    Trang chủ
-                </a>
 
                 @if(auth()->user()->role === 'student')
                     <div class="pt-4 pb-2 text-xs font-semibold text-slate-500 uppercase tracking-wider">Học viên</div>
-                    <a href="{{ route('student.study.index') }}" class="flex items-center px-4 py-2.5 rounded-lg hover:bg-slate-800 hover:text-white transition">Lớp học và Tài liệu</a>
-                    <a href="{{ route('student.assignments.index') }}" class="flex items-center px-4 py-2.5 rounded-lg hover:bg-slate-800 hover:text-white transition">Bài tập cần làm</a>
-                    <a href="{{ route('student.results.index') }}" class="flex items-center px-4 py-2.5 rounded-lg bg-blue-600 text-white font-medium shadow-sm transition">Kết quả và Phản hồi</a>
-                    <a href="{{ route('student.leave_requests.index') }}" class="flex items-center px-4 py-2.5 rounded-lg hover:bg-slate-800 hover:text-white transition">Xin nghỉ học</a>
+                    
+                    <a href="{{ route('student.study.index') }}" 
+                    class="flex items-center px-4 py-2.5 rounded-lg transition {{ request()->routeIs('student.study.*') ? 'bg-blue-600 text-white font-medium shadow-sm' : 'hover:bg-slate-800 hover:text-white' }}">
+                    Lớp học và Tài liệu
+                    </a>
+
+                    <a href="{{ route('student.assignments.index') }}" 
+                    class="flex items-center px-4 py-2.5 rounded-lg transition {{ request()->routeIs('student.assignments.*') ? 'bg-blue-600 text-white font-medium shadow-sm' : 'hover:bg-slate-800 hover:text-white' }}">
+                    Bài tập cần làm
+                    </a>
+
+                    <a href="{{ route('student.results.index') }}" 
+                    class="flex items-center px-4 py-2.5 rounded-lg transition {{ request()->routeIs('student.results.*') ? 'bg-blue-600 text-white font-medium shadow-sm' : 'hover:bg-slate-800 hover:text-white' }}">
+                    Kết quả và Phản hồi
+                    </a>
+
+                    <a href="{{ route('student.leave_requests.index') }}" 
+                    class="flex items-center px-4 py-2.5 rounded-lg transition {{ request()->routeIs('student.leave_requests.*') ? 'bg-blue-600 text-white font-medium shadow-sm' : 'hover:bg-slate-800 hover:text-white' }}">
+                    Xin nghỉ học
+                    </a>
                 @endif
 
                 @if(auth()->user()->role === 'teacher')
                     <div class="pt-4 pb-2 text-xs font-semibold text-slate-500 uppercase tracking-wider">Giáo viên</div>
-                    <a href="/teacher/attendance" class="flex items-center px-4 py-2.5 rounded-lg hover:bg-slate-800 hover:text-white transition">⏱Điểm danh</a>
-                    <a href="/teacher/materials" class="flex items-center px-4 py-2.5 rounded-lg hover:bg-slate-800 hover:text-white transition">Quản lý tài liệu</a>
-                    <a href="/teacher/assignments" class="flex items-center px-4 py-2.5 rounded-lg hover:bg-slate-800 hover:text-white transition">Giao bài tập</a>
-                    <a href="/teacher/grades" class="flex items-center px-4 py-2.5 rounded-lg hover:bg-slate-800 hover:text-white transition">Chấm bài</a>
+                    
+                    <a href="/teacher/attendance" 
+                    class="flex items-center px-4 py-2.5 rounded-lg transition {{ request()->is('teacher/attendance*') ? 'bg-blue-600 text-white font-medium shadow-sm' : 'hover:bg-slate-800 hover:text-white' }}">
+                    Điểm danh
+                    </a>
+                    
+                    <a href="/teacher/materials" 
+                    class="flex items-center px-4 py-2.5 rounded-lg transition {{ request()->is('teacher/materials*') ? 'bg-blue-600 text-white font-medium shadow-sm' : 'hover:bg-slate-800 hover:text-white' }}">
+                    Quản lý tài liệu
+                    </a>
+                    
+                    <a href="/teacher/assignments" 
+                    class="flex items-center px-4 py-2.5 rounded-lg transition {{ request()->is('teacher/assignments*') ? 'bg-blue-600 text-white font-medium shadow-sm' : 'hover:bg-slate-800 hover:text-white' }}">
+                    Giao bài tập
+                    </a>
+                    
+                    <a href="/teacher/grades" 
+                    class="flex items-center px-4 py-2.5 rounded-lg transition {{ request()->is('teacher/grades*') ? 'bg-blue-600 text-white font-medium shadow-sm' : 'hover:bg-slate-800 hover:text-white' }}">
+                    Chấm bài
+                    </a>
                 @endif
 
                 @if(auth()->user()->role === 'admin')
                     <div class="pt-4 pb-2 text-xs font-semibold text-slate-500 uppercase tracking-wider">Quản trị</div>
-                    <a href="/admin/accounts" class="flex items-center px-4 py-2.5 rounded-lg hover:bg-slate-800 hover:text-white transition">Quản lý tài khoản</a>
-                    <a href="/admin/classes" class="flex items-center px-4 py-2.5 rounded-lg hover:bg-slate-800 hover:text-white transition">Quản lý lớp học</a>
+                    
+                    <a href="/admin/accounts" 
+                    class="flex items-center px-4 py-2.5 rounded-lg transition {{ request()->is('admin/accounts*') ? 'bg-blue-600 text-white font-medium shadow-sm' : 'hover:bg-slate-800 hover:text-white' }}">
+                    Quản lý tài khoản
+                    </a>
+                    
+                    <a href="/admin/classes" 
+                    class="flex items-center px-4 py-2.5 rounded-lg transition {{ request()->is('admin/classes*') ? 'bg-blue-600 text-white font-medium shadow-sm' : 'hover:bg-slate-800 hover:text-white' }}">
+                    Quản lý lớp học
+                    </a>
                 @endif
             </nav>
             <div class="p-4 border-t border-slate-800 text-sm">

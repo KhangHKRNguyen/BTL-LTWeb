@@ -67,6 +67,14 @@ class Submission extends Model
     }
 
     /**
+     * Quan hệ 1-N: Một bài nộp có thể có nhiều phản hồi khiếu nại/trao đổi điểm số
+     */
+    public function feedbacks(): HasMany
+    {
+        return $this->hasMany(Feedback::class, 'submission_id');
+    }
+
+    /**
      * Kiểm tra xem bài nộp đã được chấm điểm chưa
      */
     public function isGraded(): bool

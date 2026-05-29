@@ -1,17 +1,12 @@
 <x-app-layout>
     <div class="py-6 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex flex-col md:flex-row gap-6"> 
-            
-            <div class="w-full md:w-64 flex-shrink-0">
-                <x-student-sidebar /> 
-            </div>
-
             <div class="flex-1 bg-white p-6 rounded-xl shadow-sm border border-gray-200">
                 <div class="container mt-2">
                     
                     <div class="pb-4 mb-6 border-b border-gray-100">
                         <h1 class="text-2xl font-bold text-gray-800 flex items-center">
-                            <span class="me-2">📚</span> Tài liệu học tập
+                            <span class="me-2"></span> Tài liệu học tập
                         </h1>
                     </div>
 
@@ -23,9 +18,9 @@
                                     <div>
                                         <h5 class="font-bold text-base tracking-tight text-white">{{ $class->class_name }}</h5>
                                         <p class="text-xs text-slate-400 mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
-                                            <span>🚪 Phòng: <span class="text-cyan-400 font-medium">{{ $class->room ?? 'N/A' }}</span></span>
+                                            <span>Phòng: <span class="text-cyan-400 font-medium">{{ $class->room ?? 'N/A' }}</span></span>
                                             <span class="text-slate-500">|</span>
-                                            <span>📅 Thời gian: {{ $class->start_time?->format('d/m/Y') ?? 'N/A' }} - {{ $class->end_time?->format('d/m/Y') ?? 'N/A' }}</span>
+                                            <span>Thời gian: {{ $class->start_time?->format('d/m/Y') ?? 'N/A' }} - {{ $class->end_time?->format('d/m/Y') ?? 'N/A' }}</span>
                                         </p>
                                     </div>
                                     <span class="px-2.5 py-0.5 bg-slate-700 text-slate-300 text-[11px] font-semibold rounded-md border border-slate-600 uppercase">
@@ -55,7 +50,7 @@
                                                             <td class="px-4 py-3.5 text-end whitespace-nowrap">
                                                                 <a href="{{ route('student.study.download', $material->id) }}" class="inline-block">
                                                                     <x-primary-button type="button" class="py-1.5 px-3 text-[11px] bg-blue-600 hover:bg-blue-700 active:bg-blue-800" title="Tải xuống tài liệu">
-                                                                        ⬇️ Tải xuống
+                                                                        Tải xuống
                                                                     </x-primary-button>
                                                                 </a>
                                                             </td>
@@ -67,7 +62,7 @@
                                     @else
                                         <div class="py-6 text-center bg-slate-50 rounded-lg border border-dashed border-gray-200">
                                             <p class="text-sm text-gray-400 flex items-center justify-center gap-1.5">
-                                                📥 Hiện lớp học này chưa được giảng viên tải lên tài liệu nào.
+                                                Hiện lớp học này chưa được giảng viên tải lên tài liệu nào.
                                             </p>
                                         </div>
                                     @endif
@@ -75,7 +70,7 @@
                             </div>
                         @empty
                             <div class="p-8 text-center border-2 border-dashed border-gray-200 rounded-xl bg-slate-50">
-                                <div class="text-4xl mb-2">🏫</div>
+                                <div class="text-4xl mb-2"></div>
                                 <h3 class="text-sm font-semibold text-gray-700">Chưa tham gia lớp học nào</h3>
                                 <p class="text-xs text-gray-400 mt-1">Dữ liệu thời khóa biểu và tài liệu môn học của bạn sẽ hiển thị tự động khi có lớp học phần chính thức.</p>
                             </div>

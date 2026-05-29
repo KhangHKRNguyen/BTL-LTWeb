@@ -50,8 +50,8 @@
                                     </p>
                                     <p class="break-words">{{ $feedback->feedback_content }}</p>
                                     
-                                    @if($feedback->old_score !== null && $feedback->new_score !== null)
-                                        <div class="mt-2 text-xs p-1.5 rounded bg-amber-500/20 text-amber-900 border border-amber-500/30">
+                                    @if($feedback->old_grade !== null && $feedback->new_grade !== null)
+                                        <div class="mt-2 text-xs p-1.5 rounded bg-green-500/60 text-green-900 border border-green-500">
                                             Hệ thống: Cập nhật điểm ({{ $feedback->old_grade }} &rarr; {{ $feedback->new_grade }})
                                         </div>
                                     @endif

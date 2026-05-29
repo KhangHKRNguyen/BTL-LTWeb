@@ -3,7 +3,7 @@
         <div class="max-w-2xl mx-auto bg-white p-6 rounded-xl shadow-sm border border-gray-200">
                     
             <h2 class="text-xl font-bold text-gray-800 mb-6 border-b border-gray-100 pb-3">
-                📝 Xin phép nghỉ học
+                Xin phép nghỉ học
             </h2>
 
          
@@ -67,7 +67,7 @@
             </form> <x-modal name="confirm-back" maxWidth="md">
                 <div class="p-6">
                     <div class="flex items-center gap-3 text-amber-600 mb-3">
-                        <span class="text-2xl">⚠️</span>
+                        <span class="text-2xl"></span>
                         <h3 class="text-lg font-bold text-gray-900">Xác nhận rời khỏi trang</h3>
                     </div>
                     

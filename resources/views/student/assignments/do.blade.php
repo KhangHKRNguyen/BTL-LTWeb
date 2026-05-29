@@ -9,7 +9,7 @@
                 </div>
 
                 <div class="p-4 bg-blue-50/60 border border-blue-100 rounded-xl text-sm text-blue-800 space-y-1 shadow-sm">
-                    <p class="font-bold text-blue-900 mb-1 flex items-center">💡 Thông tin bài tập:</p>
+                    <p class="font-bold text-blue-900 mb-1 flex items-center">Thông tin bài tập:</p>
                     <p><span class="font-medium text-blue-600">Loại hình:</span> <span class="px-2 py-0.5 bg-blue-100 text-blue-800 text-xs font-bold rounded">{{ $assignment->type }}</span></p>
                     <p><span class="font-medium text-blue-600">Lớp quản lý:</span> <span class="font-semibold text-gray-800">{{ $assignment->courseClass->class_name }}</span></p>
                     <p>
@@ -24,7 +24,7 @@
                 @if($assignment->content)
                     <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
                         <div class="px-5 py-3.5 bg-slate-50 border-b border-gray-100 font-semibold text-sm text-gray-700">
-                            📖 Nội dung đề bài
+                            Nội dung đề bài
                         </div>
                         <div class="p-5 text-sm text-gray-600 leading-relaxed">
                             {!! nl2br(e($assignment->content)) !!}
@@ -38,7 +38,7 @@
                     @if($assignment->type === 'Trắc nghiệm')
                         <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
                             <div class="px-5 py-3.5 bg-indigo-600 text-white font-semibold text-sm flex justify-between items-center">
-                                <span>🎯 Câu hỏi trắc nghiệm</span>
+                                <span>Câu hỏi trắc nghiệm</span>
                                 <span class="px-2 py-0.5 bg-indigo-700 text-xs rounded-full font-medium">{{ $assignment->questions->count() }} câu hỏi</span>
                             </div>
                             <div class="p-5 space-y-6 divide-y divide-gray-100">
@@ -76,7 +76,7 @@
                     @else
                         <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
                             <div class="px-5 py-3.5 bg-blue-600 text-white font-semibold text-sm">
-                                📝 Khu vực làm bài tự luận
+                                Khu vực làm bài tự luận
                             </div>
                             <div class="p-5 space-y-4">
                                 <div>
@@ -99,7 +99,7 @@
 
                                     @if($submission?->file_path)
                                         <div class="mt-3 p-3 bg-slate-50 border border-slate-200 rounded-lg flex items-center justify-between text-xs">
-                                            <span class="text-gray-600 font-medium">📁 Bài làm đính kèm đã lưu:</span>
+                                            <span class="text-gray-600 font-medium">Bài làm đính kèm đã lưu:</span>
                                             <a href="{{ asset($submission->file_path) }}" target="_blank">
                                                 <x-secondary-button type="button" class="py-1 px-2.5 text-[10px]">Xem file</x-secondary-button>
                                             </a>
@@ -113,7 +113,7 @@
                     @if($submission && $submission->grade !== null)
                         <div class="bg-white border border-emerald-200 rounded-xl shadow-sm overflow-hidden border-l-4 !border-l-emerald-500">
                             <div class="px-5 py-3 bg-emerald-50 text-emerald-800 font-bold text-sm">
-                                🎉 Kết quả chấm điểm từ Giáo viên
+                                Kết quả chấm điểm từ Giáo viên
                             </div>
                             <div class="p-5 space-y-2 text-sm">
                                 <p class="text-gray-700">
@@ -145,7 +145,7 @@
                         
                         @if($submission)
                             <button type="button" class="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 bg-emerald-100 border border-transparent rounded-md font-semibold text-xs text-emerald-600 uppercase tracking-widest shadow-sm cursor-not-allowed opacity-70" disabled>
-                                ✓ Bài làm đã được ghi nhận
+                                Bài làm đã được ghi nhận
                             </button>
                         @elseif(now() <= $assignment->due_time)
                             <x-primary-button type="submit" id="submitBtn">✓ Nộp bài làm</x-primary-button>
@@ -158,7 +158,7 @@
                 <x-modal name="confirm-back-assignment" maxWidth="md">
                     <div class="p-6">
                         <div class="flex items-center gap-3 text-red-500 mb-3">
-                            <span class="text-2xl">🚨</span>
+                            <span class="text-2xl"></span>
                             <h3 class="text-lg font-bold text-gray-900">Cảnh báo: Chưa nộp bài!</h3>
                         </div>
                         
@@ -184,7 +184,7 @@
             <div class="lg:col-span-1">
                 <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden sticky top-6">
                     <div class="px-4 py-3 bg-slate-800 text-slate-100 font-semibold text-sm flex items-center gap-1.5">
-                        <span>📖 Hướng dẫn làm bài</span>
+                        <span>Hướng dẫn làm bài</span>
                     </div>
                     <div class="p-5 text-xs text-gray-600 space-y-4">
                         @if($assignment->type === 'Trắc nghiệm')
@@ -204,7 +204,7 @@
                         <hr class="border-gray-100">
                         
                         <div class="bg-slate-50 p-3 rounded-lg border border-slate-100 text-center">
-                            <p class="font-medium text-gray-500 mb-1">⏰ Thời gian còn lại:</p>
+                            <p class="font-medium text-gray-500 mb-1">Thời gian còn lại:</p>
                             <p id="countdown" class="text-sm font-bold text-red-600 tracking-wide">
                                 Đang tính toán...
                             </p>

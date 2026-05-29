@@ -18,7 +18,7 @@ class ResultController extends Controller
         // Lấy danh sách các bài đã chấm của học viên đang đăng nhập
         $results = Submission::with('assignment.courseClass')
             ->where('user_id', Auth::id())
-            ->where('status', 'Đã chấm') // Hoặc bỏ điều kiện này nếu muốn hiện cả bài "Đã nộp"
+            ->where('status', 'graded')
             ->get();
 
         return view('student.results.index', compact('results'));
