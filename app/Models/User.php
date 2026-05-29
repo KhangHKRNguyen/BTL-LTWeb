@@ -13,24 +13,56 @@ class User extends Authenticatable
 {
     use HasFactory, Notifiable;
 
+    const ROLE_ADMIN   = 'admin';
+    const ROLE_TEACHER = 'teacher';
+    const ROLE_STUDENT = 'student';
+
+    const STATUS_ACTIVE   = 'active';
+    const STATUS_INACTIVE = 'inactive';
+
     protected $fillable = [
-        'name', 'email', 'password', 'role', 'status',
+        'name',
+        'email',
+        'password',
+        'role',
+        'status',
     ];
 
     protected $hidden = [
-        'password', 'remember_token',
+        'password',
+        'remember_token',
     ];
 
     protected function casts(): array
     {
         return [
             'email_verified_at' => 'datetime',
-            'password' => 'hashed',
+            'password'          => 'hashed',
         ];
     }
 
+    public function isAdmin(): bool
+    {
+        return $this->role === self::ROLE_ADMIN;
+    }
+
+    public function isTeacher(): bool
+    {
+        return $this->role === self::ROLE_TEACHER;
+    }
+
+    public function isStudent(): bool
+    {
+        return $this->role === self::ROLE_STUDENT;
+    }
+
+    public function isActive(): bool
+    {
+        return $this->status === self::STATUS_ACTIVE;
+    }
+
     /**
-     * Quan hệ 1-N: User có nhiều LeaveRequests
+     * Quan hệ 1-N: User có nhiều LeaveRequests (Đơn xin nghỉ)
      */
     public function leaveRequests(): HasMany
     {
@@ -38,7 +70,7 @@ class User extends Authenticatable
     }
 
     /**
-     * Quan hệ 1-N: User có nhiều Submissions
+     * Quan hệ 1-N: User có nhiều Submissions (Bài nộp)
      */
     public function submissions(): HasMany
     {
@@ -46,11 +78,19 @@ class User extends Authenticatable
     }
 
     /**
-     * Quan hệ 1-N: User có nhiều Attendances
+     * Quan hệ 1-N: User có nhiều Attendances (Lịch sử điểm danh)
      */
     public function attendances(): HasMany
     {
         return $this->hasMany(Attendance::class);
+    }
+
+    /**
+     * Quan hệ 1-N: Người dùng gửi nhiều phản hồi
+     */
+    public function feedbacks(): HasMany
+    {
+        return $this->hasMany(Feedback::class);
     }
 
     /**
