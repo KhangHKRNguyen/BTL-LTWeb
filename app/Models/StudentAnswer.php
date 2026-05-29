@@ -2,12 +2,14 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class StudentAnswer extends Model
 {
     protected $table = 'student_answers';
+    use HasFactory;
 
     protected $fillable = [
         'selected_option',
@@ -29,6 +31,11 @@ class StudentAnswer extends Model
     public function question(): BelongsTo
     {
         return $this->belongsTo(Question::class);
+    }
+
+    public function isCorrect(): bool
+    {
+        return mb_strtoupper((string) $this->selected_option) === mb_strtoupper((string) $this->question?->correct_option);
     }
 }
 // Đại diện cho bảng chứa kết quả bài làm của sinh viên (student_answers hoặc assignment_submissions).

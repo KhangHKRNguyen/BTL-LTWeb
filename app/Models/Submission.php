@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -9,6 +10,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Submission extends Model
 {
     protected $table = 'submissions';
+    use HasFactory;
 
     protected $fillable = [
         'submission_content',
@@ -25,7 +27,7 @@ class Submission extends Model
     ];
 
     /**
-     * Quan hệ N-1: Submission thuộc 1 Assignment (Bài tập)
+     * Quan hệ N-1: Submission thuộc 1 Assignment
      */
     public function assignment(): BelongsTo
     {
@@ -33,18 +35,48 @@ class Submission extends Model
     }
 
     /**
-     * Quan hệ N-1: Submission thuộc 1 User (Học viên)
+     * Quan hệ N-1: Submission thuộc 1 User
      */
     public function user(): BelongsTo
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class, 'user_id');
     }
 
     /**
-     * Quan hệ 1-N: Submission có nhiều StudentAnswers (Đáp án học viên)
+     * Quan hệ N-1: Submission thuộc 1 User
+     */
+    public function student(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
+
+    /**
+     * Quan hệ 1-N: Submission có nhiều StudentAnswers
      */
     public function studentAnswers(): HasMany
     {
         return $this->hasMany(StudentAnswer::class);
+    }
+
+    /**
+     * Quan hệ 1-N: Submission có nhiều StudentAnswers
+     */
+    public function answers(): HasMany
+    {
+        return $this->hasMany(StudentAnswer::class);
+    }
+
+    /**
+     * Kiểm tra xem bài nộp đã được chấm điểm chưa
+     */
+    public function isGraded(): bool
+    {
+        if ($this->grade !== null) {
+            return true;
+        }
+
+        return str_contains(mb_strtolower((string) $this->status), 'graded')
+            || str_contains(mb_strtolower((string) $this->status), 'chấm')
+            || str_contains(mb_strtolower((string) $this->status), 'cham');
     }
 }

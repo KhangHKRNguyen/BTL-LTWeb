@@ -2,28 +2,34 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class CourseClass extends Model
 {
+    use HasFactory;
+
     protected $table = 'course_classes';
 
     protected $fillable = [
         'class_name',
         'start_time',
         'end_time',
-        'room'
+        'room',
     ];
 
-    protected $casts = [
-        'start_time' => 'datetime',
-        'end_time' => 'datetime',
-    ];
+    protected function casts(): array
+    {
+        return [
+            'start_time' => 'datetime',
+            'end_time' => 'datetime',
+        ];
+    }
 
     /**
-     * Quan hệ 1-N: CourseClass có nhiều Materials (Tài liệu)
+     * Quan hệ 1-N: CourseClass có nhiều Materials
      */
     public function materials(): HasMany
     {
@@ -31,7 +37,7 @@ class CourseClass extends Model
     }
 
     /**
-     * Quan hệ 1-N: CourseClass có nhiều Assignments (Bài tập)
+     * Quan hệ 1-N: CourseClass có nhiều Assignments
      */
     public function assignments(): HasMany
     {
@@ -39,7 +45,7 @@ class CourseClass extends Model
     }
 
     /**
-     * Quan hệ 1-N: CourseClass có nhiều LeaveRequests (Đơn xin nghỉ)
+     * Quan hệ 1-N: CourseClass có nhiều LeaveRequests
      */
     public function leaveRequests(): HasMany
     {
@@ -47,7 +53,7 @@ class CourseClass extends Model
     }
 
     /**
-     * Quan hệ 1-N: CourseClass có nhiều Attendances (Điểm danh - Code của Linh)
+     * Quan hệ 1-N: CourseClass có nhiều Attendances
      */
     public function attendances(): HasMany
     {
@@ -55,19 +61,26 @@ class CourseClass extends Model
     }
 
     /**
-     * Quan hệ N-N: CourseClass có nhiều Users (học viên, giáo viên)
+     * Quan hệ N-N: CourseClass có nhiều Users
      */
     public function users(): BelongsToMany
     {
-        return $this->belongsToMany(User::class, 'class_user', 'course_class_id', 'user_id');
+        return $this->belongsToMany(User::class, 'class_user', 'course_class_id', 'user_id')->withTimestamps();
     }
 
     /**
-     * Quan hệ N-N: Lọc riêng các thành viên là Học viên trong lớp (Code của Linh)
+     * Quan hệ N-N: Lọc riêng các thành viên là Giáo viên trong lớp
+     */
+    public function teachers(): BelongsToMany
+    {
+        return $this->users()->where('role', 'teacher');
+    }
+
+    /**
+     * Quan hệ N-N: Lọc riêng các thành viên là Học viên trong lớp
      */
     public function students(): BelongsToMany
     {
-        return $this->belongsToMany(User::class, 'class_user', 'course_class_id', 'user_id')
-            ->where('role', 'student');
+        return $this->users()->where('role', 'student');
     }
 }
