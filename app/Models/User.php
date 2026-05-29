@@ -2,28 +2,25 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Database\Factories\UserFactory;
-use Illuminate\Database\Eloquent\Attributes\Fillable;
-use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-#[Fillable(['name', 'email', 'password', 'role', 'status'])]
-#[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
-    /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
 
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
+    protected $fillable = [
+        'name', 'email', 'password', 'role', 'status',
+    ];
+
+    protected $hidden = [
+        'password', 'remember_token',
+    ];
+
     protected function casts(): array
     {
         return [
@@ -33,7 +30,7 @@ class User extends Authenticatable
     }
 
     /**
-     * Quan hệ 1-N: User có nhiều LeaveRequests (Đơn xin nghỉ)
+     * Quan hệ 1-N: User có nhiều LeaveRequests
      */
     public function leaveRequests(): HasMany
     {
@@ -41,7 +38,7 @@ class User extends Authenticatable
     }
 
     /**
-     * Quan hệ 1-N: User có nhiều Submissions (Bài nộp)
+     * Quan hệ 1-N: User có nhiều Submissions
      */
     public function submissions(): HasMany
     {
@@ -49,10 +46,26 @@ class User extends Authenticatable
     }
 
     /**
-     * Quan hệ N-N: User có nhiều CourseClasses (Lớp học)
+     * Quan hệ 1-N: User có nhiều Attendances
+     */
+    public function attendances(): HasMany
+    {
+        return $this->hasMany(Attendance::class);
+    }
+
+    /**
+     * Quan hệ N-N: User có nhiều CourseClasses
      */
     public function courseClasses(): BelongsToMany
     {
-        return $this->belongsToMany(CourseClass::class, 'class_user');
+        return $this->belongsToMany(CourseClass::class, 'class_user', 'user_id', 'course_class_id');
+    }
+
+    /**
+     * Quan hệ N-N: User có nhiều CourseClasses
+     */
+    public function classes(): BelongsToMany
+    {
+        return $this->belongsToMany(CourseClass::class, 'class_user', 'user_id', 'course_class_id');
     }
 }

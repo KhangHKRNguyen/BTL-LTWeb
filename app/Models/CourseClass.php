@@ -47,10 +47,27 @@ class CourseClass extends Model
     }
 
     /**
+     * Quan hệ 1-N: CourseClass có nhiều Attendances (Điểm danh - Code của Linh)
+     */
+    public function attendances(): HasMany
+    {
+        return $this->hasMany(Attendance::class);
+    }
+
+    /**
      * Quan hệ N-N: CourseClass có nhiều Users (học viên, giáo viên)
      */
     public function users(): BelongsToMany
     {
-        return $this->belongsToMany(User::class, 'class_user');
+        return $this->belongsToMany(User::class, 'class_user', 'course_class_id', 'user_id');
+    }
+
+    /**
+     * Quan hệ N-N: Lọc riêng các thành viên là Học viên trong lớp (Code của Linh)
+     */
+    public function students(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'class_user', 'course_class_id', 'user_id')
+            ->where('role', 'student');
     }
 }
