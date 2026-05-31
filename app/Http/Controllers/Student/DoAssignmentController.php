@@ -14,7 +14,7 @@ class DoAssignmentController extends Controller
     /**
      * Danh sách bài tập
      */
-    public function index()
+    public function index(Request $request)
     {
         // Lấy danh sách lớp của học viên
         $classIds = auth()->user()->courseClasses()->pluck('course_classes.id');
@@ -25,16 +25,20 @@ class DoAssignmentController extends Controller
                 ->where('user_id', auth()->id())
                 ->pluck('course_class_id');
         }
-
+$studentClasses = \App\Models\CourseClass::whereIn('id', $classIds)->get();
         // Lấy danh sách assignments của các lớp
-        $assignments = Assignment::whereIn('course_class_id', $classIds)
+        $query = Assignment::whereIn('course_class_id', $classIds)
             ->with(['courseClass', 'submissions' => function($q) {
                 $q->where('user_id', auth()->id());
-            }])
-            ->orderBy('due_time', 'asc')
-            ->get();
+            }]);
+            if ($request->has('class_id') && $request->class_id != '') {
+            $query->where('course_class_id', $request->class_id);
+        }
 
-        return view('student.assignments.index', compact('assignments'));
+        // 5. Sắp xếp và lấy ra danh sách bài tập sau khi lọc
+        $assignments = $query->orderBy('due_time', 'asc')->get();
+
+        return view('student.assignments.index', compact('assignments','studentClasses'));
     }
 
     /**
@@ -168,15 +172,26 @@ if ($request->hasFile('file')) {
                 $submission->file_path = $filePath;
             }
 
-            $submission->status = 'Đã nộp';
+            $submission->grade = null; // Bài tự luận để null để Thành viên 3 chấm tay sau
+            $submission->status = 'Đã nộp';
             $submission->save();
         } else {
             // TRẮC NGHIỆM: Lưu student answers
             // Xóa câu trả lời cũ nếu có
             $submission->studentAnswers()->delete();
-
+$totalQuestions = $assignment->questions->count();
+            $correctAnswersCount = 0;
             // Tạo câu trả lời mới
             foreach ($validated['answers'] as $answer) {
+                $question = $assignment->questions->firstWhere('id',$answer['question_id']);
+                $isCorrect=false;
+                if ($question) {
+                    // So sánh trực tiếp: đáp án học viên chọn === đáp án đúng của giáo viên
+                    $isCorrect = ($answer['selected_option'] === $question->correct_option);
+                    if ($isCorrect) {
+                        $correctAnswersCount++;
+                    }
+                }
                 StudentAnswer::create([
                     'submission_id' => $submission->id,
                     'question_id' => $answer['question_id'],
@@ -184,13 +199,15 @@ if ($request->hasFile('file')) {
                 ]);
             }
 
-            $submission->status = 'Đã nộp';
+         // Tính điểm theo thang 10 và làm tròn 2 chữ số thập phân
+            $score = $totalQuestions > 0 ? ($correctAnswersCount / $totalQuestions) * 10 : 0;
+            $submission->grade = round($score, 2); 
+
+            $submission->status = 'Đã chấm (Tự động)';
             $submission->save();
         }
 
         return redirect()->route('student.assignments.index')
-            ->with('success', 'Bài tập nộp thành công!');
-    }
-}
+            ->with('success', 'Bài tập nộp thành công! Hệ thống đã tự động chấm điểm.');
+    }}
 
-// Gọi Model StudentAnswer để ghi nhận bài nộp vào database và cập nhật trạng thái "Đã nộp".

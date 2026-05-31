@@ -4,10 +4,29 @@
             <div class="flex-1 bg-white p-6 rounded-xl shadow-sm border border-gray-200">
                 <div class="container mt-2">
                     
-                    <div class="pb-4 mb-6 border-b border-gray-100">
+                   <div class="pb-4 mb-6 border-b border-gray-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                        
                         <h1 class="text-2xl font-bold text-gray-800 flex items-center">
-                            <span class="me-2"></span> Danh sách bài tập
+                            Danh sách bài tập
                         </h1>
+
+                        <div class="w-full sm:w-72 flex items-center gap-2">
+                            <label for="class_filter" class="shrink-0 text-xs font-semibold text-gray-500 uppercase tracking-wider">Lọc theo lớp:</label>
+                            <select id="class_filter" 
+                                    class="block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm text-sm"
+                                    onchange="window.location.href = this.value;">
+                                
+                                <option value="{{ route('student.assignments.index') }}">--- Tất cả lớp học ---</option>
+                                
+                                @foreach($studentClasses as $class)
+                                    <option value="{{ route('student.assignments.index', ['class_id' => $class->id]) }}"
+                                            @selected(request('class_id') == $class->id)>
+                                        {{ $class->class_name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+
                     </div>
 
                     @if(session('success'))
