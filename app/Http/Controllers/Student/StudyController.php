@@ -61,5 +61,9 @@ if (!Storage::disk('public')->exists($material->file_path)) {  // ✅
 }
 
 // 5. Tiến hành cho tải file
-return Storage::disk('public')->download($material->file_path, $material->title);  // ✅
+return Storage::disk('public')
+    ->download(
+        $material->file_path,
+        basename($material->file_path)
+    ); // ✅
 }}

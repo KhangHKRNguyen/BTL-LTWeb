@@ -71,6 +71,16 @@ class DoAssignmentController extends Controller
         return view('student.assignments.do', compact('assignment', 'submission'));
     }
 
+  public function viewFile(Submission $submission)
+{
+    if (!$submission->file_path) {
+        abort(404);
+    }
+
+    return Storage::disk('local')
+        ->response($submission->file_path);
+}
+
     /**
      * Lưu bài nộp
      */
@@ -92,10 +102,10 @@ class DoAssignmentController extends Controller
             // Tự luận
             $validated = $request->validate([
                 'submission_content' => 'nullable|string',
-                'file' => 'nullable|file|max:10240|mimes:pdf,doc,docx,txt,jpg,png,jpeg'
+                'file' => 'nullable|file|max:20480|mimes:pdf,doc,docx,txt,jpg,png,jpeg,mp3,m4a,wav'
             ], [
-                'file.max' => 'File không được vượt quá 10MB',
-                'file.mimes' => 'File phải là PDF, DOC, DOCX, TXT hoặc hình ảnh'
+                'file.max' => 'File không được vượt quá 20MB',
+                'file.mimes' => 'File phải là PDF, DOC, DOCX, TXT, JPG, PNG, MP3, M4A hoặc WAV'
             ]);
 
             // Kiểm tra ít nhất phải có 1 trong 2: nội dung hoặc file
@@ -111,7 +121,7 @@ class DoAssignmentController extends Controller
                 'user_id' => auth()->id()
             ],
             [
-                'status' => 'submitted'
+                'status' => 'Đã nộp'
             ]
         );
 
@@ -128,11 +138,11 @@ class DoAssignmentController extends Controller
 
                 // Lưu file mới
                 $file = $request->file('file');
-                $filePath = $file->store('submissions/' . $assignmentId, 'private');
+                $filePath = $file->store('submissions/' . $assignmentId, 'local');
                 $submission->file_path = $filePath;
             }
 
-            $submission->status = 'submitted';
+            $submission->status = 'Đã nộp';
             $submission->save();
         } else {
             // TRẮC NGHIỆM: Lưu student answers
@@ -148,7 +158,7 @@ class DoAssignmentController extends Controller
                 ]);
             }
 
-            $submission->status = 'submitted';
+            $submission->status = 'Đã nộp';
             $submission->save();
         }
 
@@ -156,15 +166,5 @@ class DoAssignmentController extends Controller
             ->with('success', 'Bài tập nộp thành công!');
     }
 }
-
-// Truy xuất danh sách bài tập được giao cho sinh viên từ database dựa trên các lớp học.
-
-// Khi sinh viên bấm "Làm bài": Controller này sẽ lấy nội dung chi tiết của đề bài (câu hỏi trắc nghiệm hoặc file đề bài tự luận) để hiển thị lên giao diện.
-
-// Khi sinh viên nộp bài: Tiếp nhận dữ liệu câu trả lời.
-
-// Nếu là trắc nghiệm: Xử lý lưu các phương án sinh viên chọn.
-
-// Nếu là tự luận: Xử lý logic upload file bài làm (validate định dạng file, kích thước file, lưu file vào thư mục lưu trữ của hệ thống).
 
 // Gọi Model StudentAnswer để ghi nhận bài nộp vào database và cập nhật trạng thái "Đã nộp".

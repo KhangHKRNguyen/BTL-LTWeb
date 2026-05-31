@@ -63,6 +63,10 @@ Route::middleware(['auth', 'role:student'])->prefix('student')->name('student.')
         Route::get('/create', [LeaveRequestController::class, 'create'])->name('create');
         Route::post('/', [LeaveRequestController::class, 'store'])->name('store');
     });
+       Route::get(
+            '/submissions/{submission}/view',
+            [DoAssignmentController::class, 'viewFile']
+        )->name('submissions.view');
 
     // Study - Tài liệu học tập
     Route::prefix('study')->name('study.')->group(function () {
@@ -77,6 +81,10 @@ Route::middleware(['auth', 'role:student'])->prefix('student')->name('student.')
         Route::post('/{id}', [DoAssignmentController::class, 'store'])->name('store');
     });
 });
+
+
+
+
 
 Route::middleware(['auth', 'role:teacher'])->prefix('teacher')->name('teacher.')->group(function () {
     
