@@ -99,15 +99,41 @@ class DoAssignmentController extends Controller
                 'answers.*.selected_option.required' => 'Vui lòng chọn đáp án',
             ]);
         } else {
+    
+        if ($request->hasFile('file')) {
+   
+}
+
             // Tự luận
             $validated = $request->validate([
                 'submission_content' => 'nullable|string',
-                'file' => 'nullable|file|max:20480|mimes:pdf,doc,docx,txt,jpg,png,jpeg,mp3,m4a,wav'
-            ], [
-                'file.max' => 'File không được vượt quá 20MB',
+                'file' => [
+    'nullable',
+    'file',
+    'max:51200'
+       ] ], [
+                'file.max' => 'File không được vượt quá 50MB',
                 'file.mimes' => 'File phải là PDF, DOC, DOCX, TXT, JPG, PNG, MP3, M4A hoặc WAV'
             ]);
 
+if ($request->hasFile('file')) {
+
+    $allowed = [
+        'pdf','doc','docx',
+        'txt','jpg','jpeg','png',
+        'mp3','m4a','wav'
+    ];
+
+    $ext = strtolower(
+        $request->file('file')->getClientOriginalExtension()
+    );
+
+    if (!in_array($ext, $allowed)) {
+        return back()->withErrors([
+            'file' => 'Định dạng file không được hỗ trợ.'
+        ]);
+    }
+}
             // Kiểm tra ít nhất phải có 1 trong 2: nội dung hoặc file
             if (empty($validated['submission_content']) && !$request->hasFile('file')) {
                 return back()->withErrors(['submission' => 'Vui lòng nhập nội dung hoặc upload file']);

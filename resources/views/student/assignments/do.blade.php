@@ -93,7 +93,7 @@
                                 </div>
 
                                 <div class="pt-2">
-                                    <x-input-label for="file" value="Tải lên tệp đính kèm bài làm (Tối đa 20MB)" />
+                                    <x-input-label for="file" value="Tải lên tệp đính kèm bài làm (Tối đa 50MB)" />
                                     <input type="file" id="file" name="file"
                                            class="block w-full mt-1 text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-slate-100 file:text-slate-700 hover:file:bg-slate-200 border border-gray-300 rounded-md shadow-sm p-1 bg-white"
                                            accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png,.mp3,.m4a,.wav"
@@ -115,8 +115,8 @@
         @if(in_array($extension, ['mp3', 'm4a', 'wav']))
 
             <audio controls class="w-full">
-                <source src="{{ asset($submission->file_path) }}">
-                Trình duyệt của bạn không hỗ trợ phát âm thanh.
+              <source src="{{ route('student.submissions.view', $submission->id) }}">
+               Trình duyệt của bạn không hỗ trợ video.
             </audio>
 
         @else
