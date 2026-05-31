@@ -22,6 +22,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/assignments', [AssignmentController::class, 'index'])->name('assignments.index');
         Route::get('/assignments/import-template', [AssignmentController::class, 'template'])->name('assignments.template');
         Route::get('/classes/{courseClass}/assignments/create', [AssignmentController::class, 'create'])->name('assignments.create');
+        Route::post('/assignments/import-preview', [AssignmentController::class, 'previewImport'])->name('assignments.import-preview');
         Route::post('/assignments', [AssignmentController::class, 'store'])->name('assignments.store');
         Route::get('/assignments/{assignment}', [AssignmentController::class, 'show'])->name('assignments.show');
 

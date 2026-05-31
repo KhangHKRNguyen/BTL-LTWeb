@@ -35,6 +35,8 @@ class AssignmentController extends Controller
 
     public function store(Request $request, ExcelImportService $excelImportService)
     {
+        $usesPreviewedQuestions = $request->boolean('import_previewed') && is_array($request->input('questions'));
+
         $rules = [
             'course_class_id' => ['required', 'exists:course_classes,id'],
             'title' => ['required', 'string', 'max:255'],
@@ -44,9 +46,10 @@ class AssignmentController extends Controller
             'due_time' => ['required', 'date', 'after:now'],
             'attachment' => ['nullable', 'file', 'max:10240'],
             'import_file' => ['nullable', 'file', 'max:5120'],
+            'import_previewed' => ['nullable', 'boolean'],
         ];
 
-        if ($request->input('type') === 'quiz' && ! $request->hasFile('import_file')) {
+        if ($request->input('type') === 'quiz' && (! $request->hasFile('import_file') || $usesPreviewedQuestions)) {
             $rules = array_merge($rules, [
                 'questions' => ['required', 'array', 'min:1'],
                 'questions.*.question_text' => ['required', 'string'],
@@ -68,9 +71,11 @@ class AssignmentController extends Controller
 
         $questions = [];
         if ($validated['type'] === 'quiz') {
-            $questions = $request->hasFile('import_file')
-                ? $excelImportService->importQuestions($request->file('import_file'))
-                : array_values($validated['questions']);
+            $questions = $usesPreviewedQuestions
+                ? array_values($validated['questions'])
+                : ($request->hasFile('import_file')
+                    ? $excelImportService->importQuestions($request->file('import_file'))
+                    : array_values($validated['questions']));
         }
 
         $assignment = DB::transaction(function () use ($request, $validated, $courseClass, $questions) {
@@ -104,6 +109,21 @@ class AssignmentController extends Controller
         return redirect()
             ->route('teacher.assignments.show', $assignment)
             ->with('success', 'Giao bài tập thành công.');
+    }
+
+    public function previewImport(Request $request, ExcelImportService $excelImportService)
+    {
+        $request->validate([
+            'import_file' => ['required', 'file', 'max:5120'],
+        ]);
+
+        $file = $request->file('import_file');
+        $questions = $excelImportService->importQuestions($file);
+
+        return response()->json([
+            'message' => 'Đã import '.count($questions).' câu hỏi từ file '.$file->getClientOriginalName().'.',
+            'questions' => $questions,
+        ]);
     }
 
     public function show(Assignment $assignment)
