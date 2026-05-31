@@ -15,6 +15,7 @@ return new class extends Migration
             $table->string('type'); // Loại bài tập (Trắc nghiệm / Tự luận)
             $table->dateTime('open_time')->nullable(); // Thời gian mở
             $table->dateTime('due_time')->nullable(); // Hạn nộp
+            $table->string('file_path')->nullable(); // File đề bài đính kèm
             $table->foreignId('course_class_id')->constrained('course_classes')->onDelete('cascade'); // Mã lớp học
             $table->timestamps();
         });

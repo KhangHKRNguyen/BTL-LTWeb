@@ -14,8 +14,10 @@ class Feedback extends Model
         'feedback_content',
         'old_grade',
         'new_grade',
+        'teacher_reply',
+        'teacher_replied_at',
         'submission_id',
-        'user_id'
+        'user_id',
     ];
 
     /**

@@ -33,7 +33,7 @@
                 <div class="bg-white border border-slate-200 rounded-xl shadow-sm flex flex-col h-[500px]">
                     <div class="px-6 py-4 border-b border-slate-200 bg-slate-50 rounded-t-xl flex justify-between items-center">
                         <h3 class="font-bold text-slate-700 flex items-center space-x-2">
-                            <span>💬 Khung trao đổi thắc mắc điểm số</span>
+                            <span>Khung trao đổi thắc mắc điểm số</span>
                         </h3>
                         <span class="text-xs text-slate-400">Học viên và Giáo viên</span>
                     </div>
@@ -50,8 +50,8 @@
                                     </p>
                                     <p class="break-words">{{ $feedback->feedback_content }}</p>
                                     
-                                    @if($feedback->old_score !== null && $feedback->new_score !== null)
-                                        <div class="mt-2 text-xs p-1.5 rounded bg-amber-500/20 text-amber-900 border border-amber-500/30">
+                                    @if($feedback->old_grade !== null && $feedback->new_grade !== null)
+                                        <div class="mt-2 text-xs p-1.5 rounded bg-green-500/60 text-green-900 border border-green-500">
                                             Hệ thống: Cập nhật điểm ({{ $feedback->old_grade }} &rarr; {{ $feedback->new_grade }})
                                         </div>
                                     @endif
