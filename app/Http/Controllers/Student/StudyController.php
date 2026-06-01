@@ -13,24 +13,40 @@ class StudyController extends Controller
     /**
      * Danh sách tài liệu học tập
      */
-    public function index()
+    public function index(Request $request)
     {
         // 1. Lấy danh sách lớp mà học viên đang tham gia kèm materials của lớp đó
-        $classes = auth()->user()->courseClasses()
-            ->with('materials')
-            ->get();
+        $classIds = auth()->user()->courseClasses()
+            ->pluck('course_classes.id');
 
         // 2. ĐÃ SỬA: Nếu không tìm thấy qua quan hệ, fetch đúng lớp từ table class_user 
         // Chứ không lấy bừa CourseClass::all() nữa để tránh lộ tài liệu lớp khác
-        if ($classes->isEmpty()) {
+        if ($classIds->isEmpty()) {
             $classIds = \DB::table('class_user')
                 ->where('user_id', auth()->id())
                 ->pluck('course_class_id');
 
-            $classes = CourseClass::whereIn('id', $classIds)->with('materials')->get();
+          //  $classes = CourseClass::whereIn('id', $classIds)->with('materials')->get();
         }
+if ($classIds->isEmpty()) {
+        $classIds = collect([]);
+    }
+       // 2. Lấy danh sách tất cả các lớp của học viên (Dùng làm dữ liệu đổ vào ô Select bộ lọc)
+    $filterClasses = CourseClass::whereIn('id', $classIds)->get();
 
-        return view('student.study.index', compact('classes'));
+    // 3. Xử lý lấy dữ liệu hiển thị kèm bộ lọc
+    $query = CourseClass::whereIn('id', $classIds);
+
+    // Nếu học viên chọn một lớp cụ thể, ta lọc chỉ lấy đúng lớp đó
+    if ($request->has('class_id') && $request->class_id != '') {
+        $query->where('id', $request->class_id);
+    }
+
+    // Eager load tài liệu (materials) của các lớp thỏa mãn điều kiện
+    $classes = $query->with('materials')->get();
+
+    // 4. Truyền thêm biến $filterClasses sang View để làm bộ lọc
+    return view('student.study.index', compact('classes', 'filterClasses'));
     }
 
     /**

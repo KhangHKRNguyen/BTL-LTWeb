@@ -1,3 +1,4 @@
+
 <x-app-layout>
     <div class="py-6 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -44,7 +45,8 @@
                             <div class="p-5 space-y-6 divide-y divide-gray-100">
                                 @foreach($assignment->questions as $question)
                                     @php
-                                        $userAnswer = $submission?->studentAnswers->where('question_id', $question->id)->first();
+                                        // ✅ DÒNG MỚI:
+$userAnswer = $submission ? $submission->studentAnswers->where('question_id', $question->id)->first() : null;
                                     @endphp
 
                                     <div class="pt-6 first:pt-0 question-block">
@@ -54,16 +56,57 @@
 
                                         <div class="ms-2 space-y-2.5 max-w-2xl">
                                             @foreach(['A' => $question->option_a, 'B' => $question->option_b, 'C' => $question->option_c, 'D' => $question->option_d] as $key => $value)
-                                                <div class="flex items-start p-3 rounded-lg border border-gray-100 hover:bg-slate-50 transition duration-150">
+                                       @php
+                                // 1. Mặc định layout lúc đang làm bài
+                                $boxClass = 'border-gray-100 hover:bg-slate-50';
+                                $labelClass = 'text-gray-700';
+                                $badgeText = '';
+
+                                // 2. Khi hệ thống đã được ghi nhận bài nộp ($submission tồn tại)
+                                if ($submission) {
+                                    $isCorrectAnswer = ($key == $question->correct_option); 
+                                    $isStudentSelected = ($userAnswer && $userAnswer->selected_option == $key);
+
+                                    if ($isCorrectAnswer) {
+                                        // ĐÁP ÁN ĐÚNG -> Nhuộm màu xanh lá
+                                        $boxClass = 'bg-emerald-50 border-emerald-400 font-semibold';
+                                        $labelClass = 'text-emerald-800';
+                                        $badgeText = 'Đáp án đúng';
+                                    } elseif ($isStudentSelected && !$isCorrectAnswer) {
+                                        // HỌC VIÊN CHỌN SAI -> Nhuộm màu đỏ cảnh báo
+                                        $boxClass = 'bg-red-50 border-red-400 font-semibold';
+                                        $labelClass = 'text-red-800';
+                                        $badgeText = 'Bạn đã chọn';
+                                    } else {
+                                        // Các đáp án sai khác không được chọn -> Làm mờ đi
+                                        $boxClass = 'border-gray-200 opacity-60 bg-gray-50/50';
+                                        $labelClass = 'text-gray-400';
+                                    }
+                                }
+                            @endphp
+                                            
+                                            <div class="flex items-start p-3 rounded-lg border border-gray-100 hover:bg-slate-50 transition duration-150 {{ $boxClass }}">
                                                     <input class="q-radio mt-0.5 text-indigo-600 focus:ring-indigo-500 border-gray-300" type="radio" 
                                                            name="answers[{{ $loop->parent->index }}][selected_option]" 
                                                            value="{{ $key }}" id="q{{ $question->id }}_{{ strtolower($key) }}"
                                                            @checked($userAnswer?->selected_option === $key)
                                                            @disabled($submission)>
-                                                    <label class="ms-3 text-sm text-gray-700 font-medium cursor-pointer w-full" for="q{{ $question->id }}_{{ strtolower($key) }}">
-                                                        <span class="font-bold text-gray-400 me-1">{{ $key }}.</span> {{ $value }}
+                                                    <label class="ms-3 text-sm text-gray-700 font-medium cursor-pointer w-full flex justify-between items-center {{ $labelClass }}" for="q{{ $question->id }}_{{ strtolower($key) }}">
+                                                        <div>
+                                                            <span class="font-bold text-gray-400 me-1 {{ $submission ? $labelClass : '' }}">{{ $key }}.</span> {{ $value }}
+                                                        </div>
+                                                        
+                                                        @if($badgeText)
+                                                            <span class="text-[11px] font-bold px-2 py-0.5 rounded-md {{ $key == $question->correct_option ? 'bg-emerald-200 text-emerald-800' : 'bg-red-200 text-red-800' }}">
+                                                                {{ $badgeText }}
+                                                            </span>
+                                                        @endif
                                                     </label>
                                                 </div>
+
+
+
+
                                             @endforeach
                                         </div>
 
@@ -271,16 +314,34 @@
     </div>
 
     <script>
-       
+      
 
         function updateCountdown() {
+
+         @if($submission)
+                document.getElementById('countdown').textContent = 'Bài tập đã hoàn thành!';
+                document.getElementById('countdown').classList.remove('text-red-600');
+                document.getElementById('countdown').classList.add('text-emerald-600');
+                return;
+            @endif
+
+            
             const dueDate = new Date('{{ $assignment->due_time }}');
             const now = new Date();
             const diff = dueDate - now;
 
             if (diff <= 0) {
                 document.getElementById('countdown').textContent = 'Đã hết hạn nộp bài!';
-                document.getElementById('submitBtn')?.setAttribute('disabled', 'disabled');
+                document.getElementById('countdown').classList.add('text-red-600');
+               const submitBtn = document.getElementById('submitBtn');
+                if (submitBtn) {
+                    submitBtn.setAttribute('disabled', 'disabled');
+                    submitBtn.textContent = 'Đang tự động nộp...';
+                }
+                const form = document.getElementById('assignmentForm');
+                if (form) {
+                    form.submit();
+                }
                 return;
             }
 
@@ -289,12 +350,16 @@
             const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
             const seconds = Math.floor((diff % (1000 * 60)) / 1000);
 
-            document.getElementById('countdown').textContent = 
-                `${days} ngày ${hours} giờ ${minutes} phút ${seconds} giây`;
+           const countdownEl = document.getElementById('countdown');
+    if (countdownEl) {
+        countdownEl.textContent = `${days} ngày ${hours} giờ ${minutes} phút ${seconds} giây`;
+    }
         }
 
         updateCountdown();
-        setInterval(updateCountdown, 1000);
+     @if(!$submission)
+    const countdownInterval = setInterval(updateCountdown, 1000);
+@endif
 
        document.getElementById('submitBtn').addEventListener('click', function(e) {
         e.preventDefault(); /// Chỉ thực hiện kiểm tra lỗi nếu bài tập là dạng Trắc nghiệm

@@ -207,7 +207,16 @@ $totalQuestions = $assignment->questions->count();
             $submission->save();
         }
 
-        return redirect()->route('student.assignments.index')
-            ->with('success', 'Bài tập nộp thành công! Hệ thống đã tự động chấm điểm.');
+      // Sau khi lưu dữ liệu vào bảng Submissions và StudentAnswers xong...
+
+if ($assignment->type === 'Trắc nghiệm') {
+    // Ở lại trang để xem ngay kết quả xanh đỏ
+    return redirect()->route('student.assignments.show', $assignment->id)
+                     ->with('success', 'Nộp bài trắc nghiệm thành công!');
+} else {
+    // Ra ngoài danh sách đối với bài tự luận
+    return redirect()->route('student.assignments.index')
+                     ->with('success', 'Nộp bài tự luận thành công! Bài làm của bạn đang chờ giáo viên chấm.');
+}
     }}
 
