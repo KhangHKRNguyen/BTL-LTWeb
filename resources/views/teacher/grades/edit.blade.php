@@ -94,7 +94,12 @@
                     @endif
 
                     @if ($submission->file_path)
-                        <a href="{{ Storage::url($submission->file_path) }}" target="_blank" class="mt-4 inline-flex text-sm font-medium text-indigo-600 hover:text-indigo-800">Xem/tải file bài làm</a>
+                        <a href="{{ Storage::url($submission->file_path) }}" download class="mt-4 inline-flex items-center gap-2 rounded-xl bg-indigo-50 border border-indigo-200 px-4 py-2.5 text-sm font-semibold text-indigo-700 hover:bg-indigo-100 hover:text-indigo-800 transition-all duration-200 shadow-sm">
+                            <svg class="h-5 w-5 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                            </svg>
+                            Tải về file bài làm (PDF)
+                        </a>
                     @endif
                 </div>
             @endif

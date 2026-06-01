@@ -97,6 +97,11 @@
             </header>
 
             <main class="p-6 flex-1">
+                @if (isset($header))
+                    <div class="mb-6 bg-white p-5 shadow-sm sm:rounded-lg border border-slate-200">
+                        {{ $header }}
+                    </div>
+                @endif
                 {{ $slot }}
             </main>
         </div>

@@ -94,7 +94,10 @@ Route::middleware(['auth', 'role:teacher'])->prefix('teacher')->name('teacher.')
     Route::get('/assignments/import-template', [AssignmentController::class, 'template'])->name('assignments.template');
     Route::get('/classes/{courseClass}/assignments/create', [AssignmentController::class, 'create'])->name('assignments.create');
     Route::post('/assignments', [AssignmentController::class, 'store'])->name('assignments.store');
+    Route::post('/assignments/parse-import', [AssignmentController::class, 'parseImport'])->name('assignments.parse-import');
     Route::get('/assignments/{assignment}', [AssignmentController::class, 'show'])->name('assignments.show');
+    Route::get('/assignments/{assignment}/export', [AssignmentController::class, 'export'])->name('assignments.export');
+    Route::get('/assignments/{assignment}/download-attachment', [AssignmentController::class, 'downloadAttachment'])->name('assignments.download-attachment');
 
     // Quản lý điểm số và Chấm bài
     Route::get('/grades', [GradeController::class, 'index'])->name('grades.index');

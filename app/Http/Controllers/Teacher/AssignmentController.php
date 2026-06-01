@@ -116,6 +116,76 @@ class AssignmentController extends Controller
         return view('teacher.assignments.show', compact('assignment'));
     }
 
+    public function parseImport(Request $request, ExcelImportService $excelImportService)
+    {
+        try {
+            $request->validate([
+                'import_file' => ['required', 'file', 'max:5120'],
+            ]);
+            
+            $questions = $excelImportService->importQuestions($request->file('import_file'));
+            
+            return response()->json([
+                'success' => true,
+                'questions' => $questions,
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->validator->errors()->first('import_file'),
+            ], 422);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Lỗi xử lý file hoặc cấu trúc Excel/CSV không đúng định dạng mẫu.',
+            ], 500);
+        }
+    }
+
+    public function export(Assignment $assignment)
+    {
+        $this->authorizeAssignment($assignment);
+        
+        $questions = $assignment->questions()->get();
+        
+        $csvContent = "\xEF\xBB\xBF"; // UTF-8 BOM for Excel compatibility
+        $csvContent .= "question_text,option_a,option_b,option_c,option_d,correct_option\n";
+        
+        foreach ($questions as $question) {
+            $text = str_replace('"', '""', $question->question_text);
+            $a = str_replace('"', '""', $question->option_a);
+            $b = str_replace('"', '""', $question->option_b);
+            $c = str_replace('"', '""', $question->option_c);
+            $d = str_replace('"', '""', $question->option_d);
+            $correct = $question->correct_option;
+            
+            $csvContent .= "\"{$text}\",\"{$a}\",\"{$b}\",\"{$c}\",\"{$d}\",\"{$correct}\"\n";
+        }
+        
+        $filename = "danh_sach_cau_hoi_" . \Illuminate\Support\Str::slug($assignment->title) . ".csv";
+        
+        return response($csvContent, 200, [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => "attachment; filename=\"{$filename}\"",
+        ]);
+    }
+
+    public function downloadAttachment(Assignment $assignment)
+    {
+        $this->authorizeAssignment($assignment);
+        
+        if (!$assignment->file_path || !\Illuminate\Support\Facades\Storage::disk('public')->exists($assignment->file_path)) {
+            return redirect()->back()->with('error', 'Không tìm thấy file đề bài đính kèm.');
+        }
+        
+        $pathInfo = pathinfo($assignment->file_path);
+        $extension = $pathInfo['extension'] ?? 'bin';
+        
+        $filename = "de_bai_" . \Illuminate\Support\Str::slug($assignment->title) . "." . $extension;
+        
+        return \Illuminate\Support\Facades\Storage::disk('public')->download($assignment->file_path, $filename);
+    }
+
     public function template(ExcelImportService $excelImportService)
     {
         return response($excelImportService->sampleCsvContent(), 200, [

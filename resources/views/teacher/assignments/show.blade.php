@@ -1,8 +1,16 @@
 <x-app-layout>
     <x-slot name="header">
         <div class="flex items-center justify-between">
-            <h2 class="text-xl font-semibold leading-tight text-gray-800">Chi tiết bài tập</h2>
-            <a href="{{ route('teacher.grades.submissions', $assignment) }}" class="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700">
+            <div class="flex items-center space-x-4">
+                <a href="{{ route('teacher.assignments.index') }}" class="inline-flex items-center rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition shadow-sm">
+                    <svg class="-ml-1 mr-1.5 h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                    </svg>
+                    Quay lại
+                </a>
+                <h2 class="text-xl font-semibold text-gray-800">Chi tiết bài tập</h2>
+            </div>
+            <a href="{{ route('teacher.grades.submissions', $assignment) }}" class="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 shadow-sm transition">
                 Xem bài nộp
             </a>
         </div>
@@ -45,11 +53,25 @@
                     </div>
                 @endif
 
-                @if ($assignment->file_path)
-                    <div class="mt-6">
-                        <a href="{{ Storage::url($assignment->file_path) }}" target="_blank" class="text-sm font-medium text-indigo-600 hover:text-indigo-800">Xem file đề bài</a>
-                    </div>
-                @endif
+                <div class="mt-6 flex flex-wrap gap-4 border-t border-slate-100 pt-6">
+                    @if ($assignment->file_path)
+                        <a href="{{ route('teacher.assignments.download-attachment', $assignment) }}" class="inline-flex items-center gap-2 rounded-xl bg-indigo-50 border border-indigo-200 px-4 py-2.5 text-sm font-semibold text-indigo-700 hover:bg-indigo-100 hover:text-indigo-800 transition shadow-sm">
+                            <svg class="h-5 w-5 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                            </svg>
+                            Tải file đề bài đính kèm
+                        </a>
+                    @endif
+
+                    @if ($assignment->isQuiz())
+                        <a href="{{ route('teacher.assignments.export', $assignment) }}" download class="inline-flex items-center gap-2 rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-2.5 text-sm font-semibold text-emerald-700 hover:bg-emerald-100 hover:text-emerald-800 transition shadow-sm">
+                            <svg class="h-5 w-5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h7a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+                            </svg>
+                            Xuất danh sách câu hỏi (Excel/CSV)
+                        </a>
+                    @endif
+                </div>
             </div>
 
             @if ($assignment->isQuiz())
