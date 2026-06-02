@@ -132,7 +132,7 @@ $studentClasses = \App\Models\CourseClass::whereIn('id', $classIds)->get();
 if ($request->hasFile('file')) {
 
     $allowed = [
-        'pdf','docx'
+        'pdf','docx','zip'
     ];
 
     $ext = strtolower(

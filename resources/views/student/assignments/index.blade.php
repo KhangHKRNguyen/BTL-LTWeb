@@ -223,6 +223,13 @@ document.addEventListener('DOMContentLoaded', function () {
                         disabled>
                         Quá hạn
                     </button>
+                      <a href="/student/assignments/${id}" class="w-full md:w-auto">
+            <button
+                type="button"
+                class="w-full justify-center py-2 px-4 text-xs inline-flex items-center justify-center bg-white border border-gray-300 rounded-md font-semibold text-gray-700 uppercase tracking-widest shadow-sm">
+                Xem chi tiết
+            </button>
+        </a>
                 `;
 
                 card.style.borderLeftColor = '#ef4444';

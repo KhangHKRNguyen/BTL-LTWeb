@@ -214,11 +214,11 @@ $userAnswer = $submission ? $submission->studentAnswers->where('question_id', $q
                     <div class="flex flex-col sm:flex-row justify-between gap-3 items-center pt-4 border-t border-gray-100">
                         @if($submission || now() > $assignment->due_time)
                             <a href="{{ route('student.assignments.index') }}" class="w-full sm:w-auto">
-                                <x-secondary-button type="button" class="w-full justify-center">← Quay lại danh sách</x-secondary-button>
+                                <x-secondary-button type="button" class="w-full justify-center">Quay lại danh sách</x-secondary-button>
                             </a>
                         @else
                             <x-secondary-button type="button" x-data x-on:click="$dispatch('open-modal', 'confirm-back-assignment')" class="w-full sm:w-auto justify-center">
-                                ← Quay lại danh sách
+                               Quay lại danh sách
                             </x-secondary-button>
                         @endif
                         
@@ -231,7 +231,7 @@ $userAnswer = $submission ? $submission->studentAnswers->where('question_id', $q
    Nộp bài làm
 </x-primary-button>
                         @else
-                            <button type="button" class="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 bg-red-100 border border-transparent rounded-md font-semibold text-xs text-red-500 uppercase tracking-widest shadow-sm cursor-not-allowed" disabled>❌ Quá hạn nộp bài</button>
+                            <button type="button" class="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 bg-red-100 border border-transparent rounded-md font-semibold text-xs text-red-500 uppercase tracking-widest shadow-sm cursor-not-allowed" disabled>Quá hạn nộp bài</button>
                         @endif
                     </div>
                 </form>
