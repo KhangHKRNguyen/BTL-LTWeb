@@ -1,6 +1,5 @@
 <x-app-layout>
     <div class="space-y-5">
-        {{-- Header --}}
         <div class="flex items-center justify-between">
             <h1 class="text-2xl font-bold text-slate-800">Quản lý tài khoản</h1>
             <a href="{{ route('admin.accounts.create') }}"
@@ -8,6 +7,18 @@
                 + Tạo tài khoản
             </a>
         </div>
+
+        {{-- Flash messages --}}
+        @if(session('success'))
+            <div class="bg-green-50 border border-green-300 text-green-700 px-4 py-3 rounded-lg text-sm">
+                {{ session('success') }}
+            </div>
+        @endif
+        @if(session('error'))
+            <div class="bg-red-50 border border-red-300 text-red-700 px-4 py-3 rounded-lg text-sm">
+                {{ session('error') }}
+            </div>
+        @endif
 
         {{-- Bộ lọc --}}
         <form method="GET" class="flex flex-wrap gap-3">
@@ -24,7 +35,6 @@
             <a href="{{ route('admin.accounts.index') }}" class="bg-slate-200 text-slate-700 px-4 py-2 rounded-lg text-sm hover:bg-slate-300 transition">Xóa lọc</a>
         </form>
 
-        {{-- Bảng --}}
         <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
             <table class="w-full text-sm">
                 <thead class="bg-slate-50 border-b border-slate-200">
@@ -69,12 +79,14 @@
                         </td>
                         <td class="px-5 py-3">
                             <div class="flex items-center justify-end space-x-2">
-                                {{-- Sửa --}}
+                                {{-- Sửa: Không cho sửa admin khác --}}
+                                @if($user->id === auth()->id() || $user->role !== 'admin')
                                 <a href="{{ route('admin.accounts.edit', $user) }}"
                                    class="text-blue-600 hover:underline text-xs font-medium">Sửa</a>
+                                @endif
 
-                                {{-- Khóa / Mở khóa --}}
-                                @if($user->id !== auth()->id())
+                                {{-- Khóa/Mở: Không áp dụng với chính mình và admin khác --}}
+                                @if($user->id !== auth()->id() && $user->role !== 'admin')
                                 <form method="POST" action="{{ route('admin.accounts.toggle-status', $user) }}"
                                       onsubmit="return confirm('{{ $user->status === 'active' ? 'Khóa tài khoản này?' : 'Mở khóa tài khoản này?' }}')">
                                     @csrf @method('PATCH')
@@ -84,7 +96,7 @@
                                     </button>
                                 </form>
 
-                                {{-- Xóa --}}
+                                {{-- Xóa: Không áp dụng với chính mình và admin khác --}}
                                 <form method="POST" action="{{ route('admin.accounts.destroy', $user) }}"
                                       onsubmit="return confirm('Xóa tài khoản {{ $user->name }}?')">
                                     @csrf @method('DELETE')
@@ -103,7 +115,6 @@
             </table>
         </div>
 
-        {{-- Phân trang --}}
         <div>{{ $users->links() }}</div>
     </div>
 </x-app-layout>
