@@ -129,6 +129,37 @@ class UserAndClassSeeder extends Seeder
                 'due_time' => now()->addDays(14),
                 'course_class_id' => 1,
                 'created_at' => now(), 'updated_at' => now()
+            ],
+            // 🎯 TRƯỜNG HỢP THÊM MỚI 2: Bài trắc nghiệm SẮP HẾT HẠN ĐỂ TEST ĐẾM NGƯỢC
+            [
+                'id' => 3,
+                'title' => 'Bài trắc nghiệm Test Đếm Ngược (Hết giờ tự nộp bài dở)',
+                'content' => 'Nộp file báo cáo PDF tiến độ dự án tuần này.',
+                'type' => 'Trắc nghiệm',
+                'open_time' => now()->subDays(1),
+                'due_time' => now()->addHours(7)->addSeconds(60), // ⏱️ Chỉ còn đúng 30 giây làm bài
+                'course_class_id' => 1,
+                'created_at' => now(), 'updated_at' => now()
+            ],
+             [
+                'id' => 4,
+                'title' => 'Bài trắc nghiệm Test Đếm Ngược (Hết giờ tự nộp bài dở)',
+                'content' => 'Nộp file báo cáo PDF tiến độ dự án tuần này.',
+                'type' => 'Trắc nghiệm',
+                'open_time' => now()->subDays(2),
+                'due_time' => now()->addSeconds(60), // ⏱️ Chỉ còn đúng 30 giây làm bài
+                'course_class_id' => 1,
+                'created_at' => now(), 'updated_at' => now()
+            ],
+            [
+                'id' => 5,
+                'title' => 'Bài tập lớn tự luận: Thiết kế hệ thống LMS',
+                'content' => 'Nộp file báo cáo PDF tiến độ dự án tuần này.',
+                'type' => 'Tự luận',
+                'open_time' => now(),
+                'due_time' => now()->addSeconds(60),
+                'course_class_id' => 1,
+                'created_at' => now(), 'updated_at' => now()
             ]
         ]);
 
@@ -150,6 +181,42 @@ class UserAndClassSeeder extends Seeder
                 'correct_option' => 'A',
                 'type' => 'Single Choice',
                 'assignment_id' => 1,
+                'created_at' => now(), 'updated_at' => now()
+            ],
+            [
+                'id' => 3,
+                'question_text' => 'Laravel được viết bằng ngôn ngữ lập trình nào?',
+                'option_a' => 'Java', 'option_b' => 'Python', 'option_c' => 'PHP', 'option_d' => 'Javascript',
+                'correct_option' => 'C',
+                'type' => 'Single Choice',
+                'assignment_id' =>3,
+                'created_at' => now(), 'updated_at' => now()
+            ],
+            [
+                'id' => 4,
+                'question_text' => 'Lệnh CLI nào dùng để chạy Migration trong Laravel?',
+                'option_a' => 'php artisan migrate', 'option_b' => 'php artisan serve', 'option_c' => 'php artisan make:model', 'option_d' => 'composer install',
+                'correct_option' => 'A',
+                'type' => 'Single Choice',
+                'assignment_id' => 3,
+                'created_at' => now(), 'updated_at' => now()
+            ],
+            [
+                'id' => 5,
+                'question_text' => 'Laravel được viết bằng ngôn ngữ lập trình nào?',
+                'option_a' => 'Java', 'option_b' => 'Python', 'option_c' => 'PHP', 'option_d' => 'Javascript',
+                'correct_option' => 'C',
+                'type' => 'Single Choice',
+                'assignment_id' =>4,
+                'created_at' => now(), 'updated_at' => now()
+            ],
+            [
+                'id' => 6,
+                'question_text' => 'Lệnh CLI nào dùng để chạy Migration trong Laravel?',
+                'option_a' => 'php artisan migrate', 'option_b' => 'php artisan serve', 'option_c' => 'php artisan make:model', 'option_d' => 'composer install',
+                'correct_option' => 'A',
+                'type' => 'Single Choice',
+                'assignment_id' =>4,
                 'created_at' => now(), 'updated_at' => now()
             ]
         ]);
