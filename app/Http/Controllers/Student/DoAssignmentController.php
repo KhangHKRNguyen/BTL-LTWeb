@@ -72,7 +72,9 @@ $studentClasses = \App\Models\CourseClass::whereIn('id', $classIds)->get();
             ->with('studentAnswers')
             ->first();
 
-        return view('student.assignments.do', compact('assignment', 'submission'));
+        $isOverdue = now() > $assignment->due_time;
+
+        return view('student.assignments.do', compact('assignment', 'submission', 'isOverdue'));
     }
 
   public function viewFile(Submission $submission)
@@ -91,13 +93,20 @@ $studentClasses = \App\Models\CourseClass::whereIn('id', $classIds)->get();
     public function store(Request $request, $assignmentId)
     {
         $assignment = Assignment::findOrFail($assignmentId);
+        $isOverdue = now() > $assignment->due_time;
 
         // Validate theo loại bài tập
         if ($assignment->type === 'Trắc nghiệm') {
+            // ✅ FIX: Khi hết giờ (auto-submit) → Chấp nhận partial/no answers
+            // Khi chưa hết giờ → Yêu cầu đầy đủ
+            $answerRules = $isOverdue 
+                ? 'nullable|array'  // Chấp nhận 0 answers hoặc partial
+                : 'required|array'; // Bắt buộc khi chưa hết giờ
+            
             $validated = $request->validate([
-                'answers' => 'required|array',
-                'answers.*.question_id' => 'required|exists:questions,id',
-                'answers.*.selected_option' => 'required|in:A,B,C,D'
+                'answers' => $answerRules,
+                'answers.*.question_id' => 'sometimes|required|exists:questions,id',
+                'answers.*.selected_option' => 'sometimes|required|in:A,B,C,D'
             ], [
                 'answers.required' => 'Vui lòng trả lời tất cả các câu hỏi',
                 'answers.*.selected_option.required' => 'Vui lòng chọn đáp án',
@@ -117,15 +126,13 @@ $studentClasses = \App\Models\CourseClass::whereIn('id', $classIds)->get();
     'max:51200'
        ] ], [
                 'file.max' => 'File không được vượt quá 50MB',
-                'file.mimes' => 'File phải là PDF, DOC, DOCX, TXT, JPG, PNG, MP3, M4A hoặc WAV'
+                'file.mimes' => 'File phải là PDF, DOCX, ZIP'
             ]);
 
 if ($request->hasFile('file')) {
 
     $allowed = [
-        'pdf','doc','docx',
-        'txt','jpg','jpeg','png',
-        'mp3','m4a','wav'
+        'pdf','docx'
     ];
 
     $ext = strtolower(
@@ -179,27 +186,43 @@ if ($request->hasFile('file')) {
             // TRẮC NGHIỆM: Lưu student answers
             // Xóa câu trả lời cũ nếu có
             $submission->studentAnswers()->delete();
-$totalQuestions = $assignment->questions->count();
+            
+            $totalQuestions = $assignment->questions->count();
             $correctAnswersCount = 0;
+            
+            // ✅ FIX: Xử lý trường hợp không có answers (user chưa chọn gì hoặc hết giờ)
+            $answers = $validated['answers'] ?? [];
+            
             // Tạo câu trả lời mới
-            foreach ($validated['answers'] as $answer) {
-                $question = $assignment->questions->firstWhere('id',$answer['question_id']);
-                $isCorrect=false;
-                if ($question) {
-                    // So sánh trực tiếp: đáp án học viên chọn === đáp án đúng của giáo viên
-                    $isCorrect = ($answer['selected_option'] === $question->correct_option);
-                    if ($isCorrect) {
-                        $correctAnswersCount++;
+            if (is_array($answers) && count($answers) > 0) {
+                foreach ($answers as $answer) {
+                    // ✅ FIX: Kiểm tra xem key tồn tại trước khi access
+                    if (!isset($answer['question_id']) || !isset($answer['selected_option'])) {
+                        continue; // Bỏ qua câu hỏi thiếu dữ liệu
                     }
+                    
+                    $question = $assignment->questions->firstWhere('id', $answer['question_id']);
+                    $isCorrect = false;
+                    
+                    if ($question) {
+                        // So sánh trực tiếp: đáp án học viên chọn === đáp án đúng của giáo viên
+                        $isCorrect = ($answer['selected_option'] === $question->correct_option);
+                        if ($isCorrect) {
+                            $correctAnswersCount++;
+                        }
+                    }
+                    
+                    StudentAnswer::create([
+                        'submission_id' => $submission->id,
+                        'question_id' => $answer['question_id'],
+                        'selected_option' => $answer['selected_option']
+                    ]);
                 }
-                StudentAnswer::create([
-                    'submission_id' => $submission->id,
-                    'question_id' => $answer['question_id'],
-                    'selected_option' => $answer['selected_option']
-                ]);
             }
+            // Nếu không có answers (answers = []), correctAnswersCount vẫn = 0
 
-         // Tính điểm theo thang 10 và làm tròn 2 chữ số thập phân
+            // Tính điểm theo thang 10 và làm tròn 2 chữ số thập phân
+            // Nếu 0 câu trả lời → Score = 0/totalQuestions * 10 = 0.00
             $score = $totalQuestions > 0 ? ($correctAnswersCount / $totalQuestions) * 10 : 0;
             $submission->grade = round($score, 2); 
 

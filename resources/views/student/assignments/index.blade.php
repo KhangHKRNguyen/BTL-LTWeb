@@ -36,17 +36,31 @@
                     <div class="space-y-4">
                         @forelse($assignments as $assignment)
                             @php
-                                $userSubmission = $assignment->submissions->first();
-                                $status = $userSubmission?->status ?? 'not-started';
-                                $dueTime = \Carbon\Carbon::parse($assignment->due_time);
-                                $isOverdue = now() > $dueTime;
-                                
-                                // Thiết lập màu sắc đường viền bên trái dựa trên trạng thái quá hạn
-                                $borderColor = ($isOverdue && $status !== 'submitted') ? 'border-l-red-500' : 'border-l-blue-500';
-                            @endphp
+    $userSubmission = $assignment->submissions->first();
+    $dueTime = \Carbon\Carbon::parse($assignment->due_time);
+    $openTime = \Carbon\Carbon::parse($assignment->open_time);
+    $isOverdue = now() > $dueTime;
+    $isNotOpen = now() < $openTime;
 
-                            <div class="p-5 bg-white border border-gray-200 hover:border-blue-200 rounded-xl shadow-sm transition-all duration-200 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-l-4 !{{ $borderColor }}">
-                                
+   if ($isNotOpen) {
+    $borderColor = '#d1d5db'; // gray-300
+} elseif ($isOverdue && !$userSubmission) {
+    $borderColor = '#ef4444'; // red-500
+} else {
+    $borderColor = '#0F172A'; // blue-500
+}
+@endphp
+
+
+
+
+                            <div
+    class="assignment-card p-5 bg-white border border-gray-200 hover:border-blue-200 rounded-xl shadow-sm transition-all duration-200 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-l-4"
+    data-id="{{ $assignment->id }}"
+    data-open="{{ $openTime->timestamp }}"
+    data-due="{{ $dueTime->timestamp }}"
+    data-submitted="{{ $userSubmission ? 1 : 0 }}"
+> 
                                 <div class="space-y-1.5 flex-1">
                                     <h5 class="text-base font-bold text-gray-800">{{ $assignment->title }}</h5>
                                     
@@ -59,17 +73,26 @@
                                                 {{ $assignment->type }}
                                             </span>
                                         </p>
-                                        
+                                        <p class="flex items-center gap-1.5">
+    <span class="font-medium text-gray-400">Mở từ:</span>
+    <span class="{{ $isNotOpen ? 'text-gray-500 font-semibold' : 'text-gray-700' }}">
+        {{ $openTime->format('d/m/Y H:i') }}
+    </span>
+</p>
                                         <p class="flex items-center gap-1.5">
                                             <span class="font-medium text-gray-400">Hạn nộp:</span> 
-                                            <span class="{{ ($isOverdue && $status !== 'submitted') ? 'text-red-600 font-bold' : 'text-gray-700' }}">
+                                            <span class="{{ ($isOverdue && !$userSubmission) ? 'text-red-600 font-bold' : 'text-gray-700' }}">
                                                 {{ $dueTime->format('d/m/Y H:i') }}
                                             </span>
-                                            @if($isOverdue && $status !== 'submitted')
-                                                <span class="px-2 py-0.5 bg-red-50 text-red-700 text-[10px] font-bold rounded border border-red-100 uppercase">
-                                                    Quá hạn
-                                                </span>
-                                            @endif
+                                            @if($isNotOpen)
+    <span class="px-2 py-0.5 bg-gray-100 text-gray-500 text-[10px] font-bold rounded border border-gray-200 uppercase">
+        Chưa mở
+    </span>
+@elseif($isOverdue && !$userSubmission)
+    <span class="px-2 py-0.5 bg-red-50 text-red-700 text-[10px] font-bold rounded border border-red-100 uppercase">
+        Quá hạn
+    </span>
+@endif
                                         </p>
                                     </div>
 
@@ -80,37 +103,51 @@
                                     @endif
                                 </div>
                                 
-                                <div class="flex flex-col items-start md:items-end gap-2 w-full md:w-auto">
-                                    @if(!$userSubmission)
-                                        @if(!$isOverdue)
-                                            <a href="{{ route('student.assignments.show', $assignment->id) }}" class="w-full md:w-auto">
-                                                <x-primary-button type="button" class="w-full justify-center py-2 px-4 text-xs">
-                                                    Làm bài
-                                                </x-primary-button>
-                                            </a>
-                                        @else
-                                            <button class="w-full md:w-auto inline-flex items-center justify-center px-4 py-2 bg-gray-100 border border-transparent rounded-md font-semibold text-xs text-gray-400 uppercase tracking-widest shadow-sm cursor-not-allowed" disabled>
-                                                Quá hạn
-                                            </button>
-                                        @endif
-                                    @else
-                                        <div class="flex flex-wrap items-center gap-2">
-                                            <span class="inline-flex items-center px-2.5 py-1 bg-emerald-50 text-emerald-700 text-xs font-bold rounded-md border border-emerald-200">
-                                                Đã nộp
-                                            </span>
-                                            @if($userSubmission->grade !== null)
-                                                <span class="inline-flex items-center px-2.5 py-1 bg-indigo-50 text-indigo-700 text-xs font-bold rounded-md border border-indigo-200">
-                                                    Điểm: {{ $userSubmission->grade }}/10
-                                                </span>
-                                            @endif
-                                        </div>
-                                        
-                                        <a href="{{ route('student.assignments.show', $assignment->id) }}" class="w-full md:w-auto">
-                                            <x-secondary-button type="button" class="w-full justify-center py-1.5 text-[11px]">
-                                                Xem chi tiết
-                                            </x-secondary-button>
-                                        </a>
-                                    @endif
+                                <div id="action-area-{{ $assignment->id }}" class="flex flex-col items-start md:items-end gap-2 w-full md:w-auto">
+                                    @if($isNotOpen)
+    {{-- Chưa đến giờ mở --}}
+    <button class="w-full md:w-auto inline-flex items-center justify-center px-4 py-2 bg-gray-100 border border-transparent rounded-md font-semibold text-xs text-gray-400 uppercase tracking-widest shadow-sm cursor-not-allowed" disabled>
+        Chưa mở
+    </button>
+    <span class="text-[10px] text-gray-400 text-center">
+        Mở lúc {{ $openTime->format('H:i d/m/Y') }}
+    </span>
+@elseif(!$userSubmission)
+    {{-- Chưa nộp bài --}}
+    @if(!$isOverdue)
+        <a href="{{ route('student.assignments.show', $assignment->id) }}" class="w-full md:w-auto">
+            <x-primary-button type="button" class="w-full justify-center py-2 px-4 text-xs">
+                LÀM BÀI
+            </x-primary-button>
+        </a>
+    @else
+        <button class="w-full md:w-auto inline-flex items-center justify-center px-4 py-2 bg-gray-100 border border-transparent rounded-md font-semibold text-xs text-gray-400 uppercase tracking-widest shadow-sm cursor-not-allowed" disabled>
+           Quá hạn
+        </button>
+        <a href="{{ route('student.assignments.show', $assignment->id) }}" class="w-full md:w-auto">
+            <x-secondary-button type="button" class="w-full justify-center py-2 px-4 text-xs">
+                Xem chi tiết
+            </x-secondary-button>
+        </a>
+    @endif
+@else
+    {{-- Đã nộp bài --}}
+    <div class="flex flex-wrap items-center gap-2">
+        <span class="inline-flex items-center px-2.5 py-1 bg-emerald-50 text-emerald-700 text-xs font-bold rounded-md border border-emerald-200">
+            Đã nộp
+        </span>
+        @if($userSubmission->grade !== null)
+            <span class="inline-flex items-center px-2.5 py-1 bg-indigo-50 text-indigo-700 text-xs font-bold rounded-md border border-indigo-200">
+                Điểm: {{ $userSubmission->grade }}/10
+            </span>
+        @endif
+    </div>
+    <a href="{{ route('student.assignments.show', $assignment->id) }}" class="w-full md:w-auto">
+        <x-secondary-button type="button" class="w-full justify-center py-1.5 text-[11px]">
+            Xem chi tiết
+        </x-secondary-button>
+    </a>
+@endif
                                 </div>
 
                             </div>
@@ -126,4 +163,79 @@
                 </div>
             </div> </div> 
     </div>
+
+
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
+    function updateAssignments() {
+
+        const now = Math.floor(Date.now() / 1000);
+
+        document.querySelectorAll('.assignment-card').forEach(card => {
+
+            const id = card.dataset.id;
+            const openTime = parseInt(card.dataset.open);
+            const dueTime = parseInt(card.dataset.due);
+            const submitted = card.dataset.submitted === '1';
+
+            const actionArea =
+                document.getElementById('action-area-' + id);
+
+            if (!actionArea || submitted) return;
+
+            // CHƯA MỞ
+            if (now < openTime) {
+
+                actionArea.innerHTML = `
+                    <button
+                        class="w-full md:w-auto inline-flex items-center justify-center px-4 py-2 bg-gray-100 border border-transparent rounded-md font-semibold text-xs text-gray-400 uppercase tracking-widest shadow-sm cursor-not-allowed"
+                        disabled>
+                        Chưa mở
+                    </button>
+                `;
+
+                card.style.borderLeftColor = '#d1d5db';
+            }
+
+            // ĐANG MỞ
+            else if (now >= openTime && now <= dueTime) {
+
+                actionArea.innerHTML = `
+                    <a href="/student/assignments/${id}">
+                        <button
+                            class="inline-flex items-center px-4 py-2 bg-slate-900 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-slate-900">
+                            LÀM BÀI
+                        </button>
+                    </a>
+                `;
+
+                card.style.borderLeftColor = '#3b82f6';
+            }
+
+            // QUÁ HẠN
+            else {
+
+                actionArea.innerHTML = `
+                    <button
+                        class="w-full md:w-auto inline-flex items-center justify-center px-4 py-2 bg-gray-100 border border-transparent rounded-md font-semibold text-xs text-gray-400 uppercase tracking-widest shadow-sm cursor-not-allowed"
+                        disabled>
+                        Quá hạn
+                    </button>
+                `;
+
+                card.style.borderLeftColor = '#ef4444';
+            }
+
+        });
+    }
+
+    updateAssignments();
+
+    setInterval(updateAssignments, 1000);
+});
+</script>
+
+
 </x-app-layout>

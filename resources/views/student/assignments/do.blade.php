@@ -5,6 +5,11 @@
             
             <div class="lg:col-span-2 space-y-6">
                 
+                {{-- ✅ Hiển thị message success khi auto-submit --}}
+                @if(session('success'))
+                    <x-auth-session-status :status="session('success')" class="mb-4 p-4 bg-green-50 text-green-700 border border-green-200 rounded-lg shadow-sm font-medium" />
+                @endif
+                
                 <div>
                     <h1 class="text-2xl font-bold text-gray-900 tracking-tight">{{ $assignment->title }}</h1>
                 </div>
@@ -35,6 +40,9 @@
 
                 <form action="{{ route('student.assignments.store', $assignment->id) }}" method="POST" enctype="multipart/form-data" id="assignmentForm" class="space-y-6">
                     @csrf
+                    
+                    {{-- ✅ Hidden input để tracking auto-submit khi hết giờ --}}
+                    <input type="hidden" name="auto_submit" id="autoSubmitFlag" value="0">
 
                     @if($assignment->type === 'Trắc nghiệm')
                         <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
@@ -90,7 +98,7 @@ $userAnswer = $submission ? $submission->studentAnswers->where('question_id', $q
                                                            name="answers[{{ $loop->parent->index }}][selected_option]" 
                                                            value="{{ $key }}" id="q{{ $question->id }}_{{ strtolower($key) }}"
                                                            @checked($userAnswer?->selected_option === $key)
-                                                           @disabled($submission)>
+                                                           @disabled($submission || now() > $assignment->due_time)>
                                                     <label class="ms-3 text-sm text-gray-700 font-medium cursor-pointer w-full flex justify-between items-center {{ $labelClass }}" for="q{{ $question->id }}_{{ strtolower($key) }}">
                                                         <div>
                                                             <span class="font-bold text-gray-400 me-1 {{ $submission ? $labelClass : '' }}">{{ $key }}.</span> {{ $value }}
@@ -131,7 +139,7 @@ $userAnswer = $submission ? $submission->studentAnswers->where('question_id', $q
                                     <textarea id="submission_content" name="submission_content" rows="6" 
                                               class="block w-full mt-1 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm text-sm" 
                                               placeholder="Gõ trực tiếp câu trả lời của bạn tại đây..."
-                                              @disabled($submission)>{{ $submission?->submission_content }}</textarea>
+                                              @disabled($submission || now() > $assignment->due_time)>{{ $submission?->submission_content }}</textarea>
                                     <x-input-error :messages="$errors->get('submission_content')" class="mt-1" />
                                 </div>
 
@@ -139,9 +147,9 @@ $userAnswer = $submission ? $submission->studentAnswers->where('question_id', $q
                                     <x-input-label for="file" value="Tải lên tệp đính kèm bài làm (Tối đa 50MB)" />
                                     <input type="file" id="file" name="file"
                                            class="block w-full mt-1 text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-slate-100 file:text-slate-700 hover:file:bg-slate-200 border border-gray-300 rounded-md shadow-sm p-1 bg-white"
-                                           accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png,.mp3,.m4a,.wav"
-                                           @disabled($submission)>
-                                    <span class="text-[11px] text-gray-400 block mt-1">Định dạng hỗ trợ: PDF, DOC, DOCX,.TXT, JPG, PNG, MP3, M4A, WAV</span>
+                                           accept=".pdf,.docx,.zip"
+                                           @disabled($submission || now() > $assignment->due_time)>
+                                    <span class="text-[11px] text-gray-400 block mt-1">Định dạng hỗ trợ: PDF, DOCX, ZIP</span>
                                     <x-input-error :messages="$errors->get('file')" class="mt-1" />
 
                                     @if($submission?->file_path)
@@ -155,14 +163,7 @@ $userAnswer = $submission ? $submission->studentAnswers->where('question_id', $q
             Bài làm đính kèm đã lưu:
         </span>
 
-        @if(in_array($extension, ['mp3', 'm4a', 'wav']))
-
-            <audio controls class="w-full">
-              <source src="{{ route('student.submissions.view', $submission->id) }}">
-               Trình duyệt của bạn không hỗ trợ video.
-            </audio>
-
-        @else
+      
 
             <a href="{{ route('student.submissions.view', $submission->id) }}"
    target="_blank">
@@ -173,7 +174,7 @@ $userAnswer = $submission ? $submission->studentAnswers->where('question_id', $q
                 </x-secondary-button>
             </a>
 
-        @endif
+     
     </div>
 
 @endif
@@ -183,9 +184,15 @@ $userAnswer = $submission ? $submission->studentAnswers->where('question_id', $q
                     @endif
 
                     @if($submission && $submission->grade !== null)
-                        <div class="bg-white border border-emerald-200 rounded-xl shadow-sm overflow-hidden border-l-4 !border-l-emerald-500">
-                            <div class="px-5 py-3 bg-emerald-50 text-emerald-800 font-bold text-sm">
-                                Kết quả chấm điểm từ Giáo viên
+                        @php
+                            $isAutoGraded = str_contains($submission->status, 'Tự động');
+                        @endphp
+                        <div class="bg-white border {{ $isAutoGraded ? 'border-blue-200' : 'border-emerald-200' }} rounded-xl shadow-sm overflow-hidden border-l-4 !{{ $isAutoGraded ? 'border-l-blue-500' : 'border-l-emerald-500' }}">
+                            <div class="px-5 py-3 {{ $isAutoGraded ? 'bg-blue-50 text-blue-800' : 'bg-emerald-50 text-emerald-800' }} font-bold text-sm flex items-center justify-between">
+                                <span>{{ $isAutoGraded ? 'Kết quả tự động chấm' : 'Kết quả chấm điểm từ Giáo viên' }}</span>
+                                @if($isAutoGraded)
+                                    <span class="px-2 py-1 bg-blue-100 text-blue-700 text-xs font-bold rounded-full">Tự động</span>
+                                @endif
                             </div>
                             <div class="p-5 space-y-2 text-sm">
                                 <p class="text-gray-700">
@@ -205,7 +212,7 @@ $userAnswer = $submission ? $submission->studentAnswers->where('question_id', $q
                 
 
                     <div class="flex flex-col sm:flex-row justify-between gap-3 items-center pt-4 border-t border-gray-100">
-                        @if($submission)
+                        @if($submission || now() > $assignment->due_time)
                             <a href="{{ route('student.assignments.index') }}" class="w-full sm:w-auto">
                                 <x-secondary-button type="button" class="w-full justify-center">← Quay lại danh sách</x-secondary-button>
                             </a>
@@ -313,129 +320,86 @@ $userAnswer = $submission ? $submission->studentAnswers->where('question_id', $q
         </div>
     </div>
 
-    <script>
-      
+<script>
+    const dueDate = new Date('{{ $assignment->due_time }}');
+    const isAlreadyOverdue = (dueDate - new Date()) <= 0;
+    const countdownEl = document.getElementById('countdown');
 
-        function updateCountdown() {
-
-         @if($submission)
-                document.getElementById('countdown').textContent = 'Bài tập đã hoàn thành!';
-                document.getElementById('countdown').classList.remove('text-red-600');
-                document.getElementById('countdown').classList.add('text-emerald-600');
-                return;
-            @endif
-
-            
-            const dueDate = new Date('{{ $assignment->due_time }}');
-            const now = new Date();
-            const diff = dueDate - now;
-
-            if (diff <= 0) {
-                document.getElementById('countdown').textContent = 'Đã hết hạn nộp bài!';
-                document.getElementById('countdown').classList.add('text-red-600');
-               const submitBtn = document.getElementById('submitBtn');
-                if (submitBtn) {
-                    submitBtn.setAttribute('disabled', 'disabled');
-                    submitBtn.textContent = 'Đang tự động nộp...';
+    @if($submission)
+        if (countdownEl) {
+            countdownEl.textContent = 'Bài tập đã hoàn thành!';
+            countdownEl.classList.add('text-emerald-600');
+        }
+    @else
+        if (isAlreadyOverdue) {
+            if (countdownEl) {
+                countdownEl.textContent = 'Đã hết hạn nộp bài!';
+                countdownEl.classList.add('text-red-600');
+            }
+        } else {
+            function updateCountdown() {
+                const diff = dueDate - new Date();
+                if (diff <= 0) {
+                    if (countdownEl) {
+                        countdownEl.textContent = 'Đã hết hạn nộp bài!';
+                        countdownEl.classList.add('text-red-600');
+                    }
+                    clearInterval(countdownInterval);
+                    document.getElementById('autoSubmitFlag').value = '1';
+                    document.getElementById('assignmentForm').submit();
+                    return;
                 }
-                const form = document.getElementById('assignmentForm');
-                if (form) {
-                    form.submit();
+                const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+                const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+                if (countdownEl) {
+                    countdownEl.textContent = `${days} ngày ${hours} giờ ${minutes} phút ${seconds} giây`;
                 }
+            }
+            updateCountdown();
+            const countdownInterval = setInterval(updateCountdown, 1000);
+        }
+    @endif
+
+    const submitBtnEl = document.getElementById('submitBtn');
+    if (submitBtnEl) {
+        submitBtnEl.addEventListener('click', function(e) {
+            e.preventDefault();
+
+            if ("{{ $assignment->type }}" !== 'Trắc nghiệm') {
+                const content = document.getElementById('submission_content')?.value.trim();
+                const fileSelected = document.getElementById('file')?.files.length > 0;
+                if (!content && !fileSelected) {
+                    alert('Vui lòng nhập nội dung bài làm hoặc tải lên tệp đính kèm.');
+                    return;
+                }
+                window.dispatchEvent(new CustomEvent('open-modal', { detail: 'confirm-submit-assignment' }));
                 return;
             }
 
-            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-            const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-
-           const countdownEl = document.getElementById('countdown');
-    if (countdownEl) {
-        countdownEl.textContent = `${days} ngày ${hours} giờ ${minutes} phút ${seconds} giây`;
-    }
-        }
-
-        updateCountdown();
-     @if(!$submission)
-    const countdownInterval = setInterval(updateCountdown, 1000);
-@endif
-
-       document.getElementById('submitBtn').addEventListener('click', function(e) {
-        e.preventDefault(); /// Chỉ thực hiện kiểm tra lỗi nếu bài tập là dạng Trắc nghiệm
-        if ("{{ $assignment->type }}" !== 'Trắc nghiệm') {
-
-    const content =
-        document.getElementById('submission_content')
-            ?.value.trim();
-
-    const fileSelected =
-        document.getElementById('file')
-            ?.files.length > 0;
-
-    if (!content && !fileSelected) {
-
-        alert(
-            'Vui lòng nhập nội dung bài làm hoặc tải lên tệp đính kèm.'
-        );
-
-        return;
-    }
-
-    const event = new CustomEvent(
-        'open-modal',
-        {
-            detail: 'confirm-submit-assignment'
-        }
-    );
-
-    window.dispatchEvent(event);
-
-    return;
-}
-
-        let hasError = false;
-  
-        // Tìm toàn bộ các khối câu hỏi trên giao diện
-        const questionBlocks = document.querySelectorAll('.question-block');
-
-        questionBlocks.forEach(block => {
-            // Tìm các nút radio bên trong câu hỏi này xem có nút nào được tích không
-            const radios = block.querySelectorAll('.q-radio');
-            let isChecked = false;
-            
-            radios.forEach(radio => {
-                if (radio.checked) {
-                    isChecked = true;
+            let hasError = false;
+            document.querySelectorAll('.question-block').forEach(block => {
+                const radios = block.querySelectorAll('.q-radio');
+                const isChecked = [...radios].some(r => r.checked);
+                const errorDiv = block.querySelector('.error-message');
+                if (!isChecked) {
+                    errorDiv.classList.remove('hidden');
+                    block.classList.add('bg-red-50/50', 'p-4', 'rounded-xl', 'border', 'border-red-100');
+                    hasError = true;
+                } else {
+                    errorDiv.classList.add('hidden');
+                    block.classList.remove('bg-red-50/50', 'p-4', 'rounded-xl', 'border', 'border-red-100');
                 }
             });
 
-            const errorDiv = block.querySelector('.error-message');
-            if (!isChecked) {
-                // 1. Nếu câu này chưa chọn đáp án -> Hiện dòng thông báo lỗi màu đỏ ngay dưới câu đó
-                errorDiv.classList.remove('hidden');
-                // Tô viền nhẹ màu đỏ xung quanh câu hỏi chưa làm để học viên dễ nhận biết
-                block.classList.add('bg-red-50/50', 'p-4', 'rounded-xl', 'border', 'border-red-100');
-                hasError = true;
+            if (hasError) {
+                const firstError = document.querySelector('.error-message:not(.hidden)');
+                if (firstError) firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
             } else {
-                // Nếu câu này đã làm -> Ẩn thông báo lỗi đi nếu trước đó có hiện
-                errorDiv.classList.add('hidden');
-                block.classList.remove('bg-red-50/50', 'p-4', 'rounded-xl', 'border', 'border-red-100');
+                window.dispatchEvent(new CustomEvent('open-modal', { detail: 'confirm-submit-assignment' }));
             }
         });
-
-       if (hasError) {
-    // Hệ thống chỉ âm thầm cuộn màn hình lên câu bị thiếu đầu tiên để học viên làm bù
-    const firstError = document.querySelector('.error-message:not(.hidden)');
-    if (firstError) {
-        firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
-    return;
-} else {
-    // Nếu làm đủ hết thì mở popup xác nhận nộp bài
-    const event = new CustomEvent('open-modal', { detail: 'confirm-submit-assignment' });
-    window.dispatchEvent(event);
-}
-    });
-    </script>
+</script>
 </x-app-layout>
