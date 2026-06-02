@@ -63,7 +63,7 @@
                         </a>
                     @endif
 
-                    @if ($assignment->isQuiz())
+                    @if ($assignment->isquiz())
                         <a href="{{ route('teacher.assignments.export', $assignment) }}" download class="inline-flex items-center gap-2 rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-2.5 text-sm font-semibold text-emerald-700 hover:bg-emerald-100 hover:text-emerald-800 transition shadow-sm">
                             <svg class="h-5 w-5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h7a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
@@ -74,7 +74,7 @@
                 </div>
             </div>
 
-            @if ($assignment->isQuiz())
+            @if ($assignment->isquiz())
                 <div class="bg-white p-6 shadow-sm sm:rounded-lg">
                     <h3 class="font-semibold text-gray-900">Danh sách câu hỏi</h3>
                     <div class="mt-4 space-y-4">

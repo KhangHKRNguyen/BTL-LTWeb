@@ -39,14 +39,14 @@ class AssignmentController extends Controller
             'course_class_id' => ['required', 'exists:course_classes,id'],
             'title' => ['required', 'string', 'max:255'],
             'content' => ['nullable', 'string'],
-            'type' => ['required', Rule::in(['quiz', 'essay'])],
+            'type' => ['required', Rule::in(['Trắc nghiệm', 'Tự luận'])],
             'open_time' => ['nullable', 'date', 'before:due_time'],
             'due_time' => ['required', 'date', 'after:now'],
             'attachment' => ['nullable', 'file', 'max:10240'],
             'import_file' => ['nullable', 'file', 'max:5120'],
         ];
 
-        if ($request->input('type') === 'quiz' && ! $request->hasFile('import_file')) {
+        if ($request->input('type') === 'Trắc nghiệm' && ! $request->hasFile('import_file')) {
             $rules = array_merge($rules, [
                 'questions' => ['required', 'array', 'min:1'],
                 'questions.*.question_text' => ['required', 'string'],
@@ -58,7 +58,7 @@ class AssignmentController extends Controller
             ]);
         }
 
-        if ($request->input('type') === 'essay') {
+        if ($request->input('type') === 'Tự luận') {
             $rules['content'] = ['required', 'string'];
         }
 
@@ -67,7 +67,7 @@ class AssignmentController extends Controller
         $this->authorizeClass($courseClass);
 
         $questions = [];
-        if ($validated['type'] === 'quiz') {
+        if ($validated['type'] === 'Trắc nghiệm') {
             $questions = $request->hasFile('import_file')
                 ? $excelImportService->importQuestions($request->file('import_file'))
                 : array_values($validated['questions']);

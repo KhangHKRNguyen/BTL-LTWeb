@@ -62,11 +62,11 @@ class Assignment extends Model
     /**
      * Kiểm tra bài tập có phải trắc nghiệm không
      */
-    public function isQuiz(): bool
+    public function isquiz(): bool
     {
         $type = $this->normalizedType();
 
-        return str_contains($type, 'quiz')
+        return str_contains($type, 'Trắc nghiệm')
             || str_contains($type, 'trac_nghiem')
             || (str_contains($type, 'tr') && str_contains($type, 'nghi'));
     }
@@ -78,7 +78,7 @@ class Assignment extends Model
     {
         $type = $this->normalizedType();
 
-        return str_contains($type, 'essay')
+        return str_contains($type, 'Tự luận')
             || str_contains($type, 'tu_luan')
             || str_contains($type, 'luan');
     }
@@ -88,7 +88,7 @@ class Assignment extends Model
      */
     public function typeLabel(): string
     {
-        return $this->isQuiz() ? 'Trắc nghiệm' : 'Tự luận';
+        return $this->isquiz() ? 'Trắc nghiệm' : 'Tự luận';
     }
 
     /**

@@ -43,7 +43,7 @@
                 </div>
             </div>
 
-            @if ($submission->assignment->isQuiz())
+            @if ($submission->assignment->isquiz())
                 @php
                     $answers = $submission->answers->keyBy('question_id');
                 @endphp
@@ -176,7 +176,7 @@
                 <div class="grid gap-5 md:grid-cols-3">
                     <div>
                         <label for="grade" class="block text-sm font-medium text-gray-700">Điểm số</label>
-                        <input id="grade" type="number" name="grade" min="0" max="10" step="0.01" value="{{ old('grade', $submission->grade) }}" @if ($submission->assignment->isQuiz()) readonly @endif class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 @if ($submission->assignment->isQuiz()) bg-gray-100 @endif">
+                        <input id="grade" type="number" name="grade" min="0" max="10" step="0.01" value="{{ old('grade', $submission->grade) }}" @if ($submission->assignment->isquiz()) readonly @endif class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 @if ($submission->assignment->isquiz()) bg-gray-100 @endif">
                     </div>
                     <div class="md:col-span-3">
                         <label for="teacher_comment" class="block text-sm font-medium text-gray-700">Nhận xét</label>

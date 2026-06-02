@@ -32,10 +32,10 @@ class GradeController extends Controller
     {
         $this->authorizeAssignment($assignment);
 
-        if ($assignment->isQuiz()) {
+        if ($assignment->isquiz()) {
             $assignment->load(['questions', 'submissions.answers.question']);
             foreach ($assignment->submissions as $submission) {
-                $this->syncQuizGrade($submission);
+                $this->syncquizGrade($submission);
             }
         }
 
@@ -80,8 +80,8 @@ class GradeController extends Controller
 
         $this->authorizeAssignment($submission->assignment);
 
-        if ($submission->assignment->isQuiz()) {
-            $this->syncQuizGrade($submission);
+        if ($submission->assignment->isquiz()) {
+            $this->syncquizGrade($submission);
             $submission->refresh()->load(['student', 'assignment.questions', 'answers.question']);
         }
 
@@ -93,12 +93,12 @@ class GradeController extends Controller
         $submission->load(['assignment.questions', 'answers.question']);
         $this->authorizeAssignment($submission->assignment);
 
-        if ($submission->assignment->isQuiz()) {
+        if ($submission->assignment->isquiz()) {
             $validated = $request->validate([
                 'teacher_comment' => ['nullable', 'string'],
             ]);
 
-            $grade = $this->calculateQuizGrade($submission);
+            $grade = $this->calculatequizGrade($submission);
             $submission->update([
                 'grade' => $grade,
                 'teacher_comment' => $validated['teacher_comment'] ?? null,
@@ -122,20 +122,20 @@ class GradeController extends Controller
             ->with('success', 'Chấm bài thành công.');
     }
 
-    private function syncQuizGrade(Submission $submission): void
+    private function syncquizGrade(Submission $submission): void
     {
-        if (! $submission->assignment->isQuiz()) {
+        if (! $submission->assignment->isquiz()) {
             return;
         }
 
-        $grade = $this->calculateQuizGrade($submission);
+        $grade = $this->calculatequizGrade($submission);
 
         if ((string) $submission->grade !== number_format($grade, 2, '.', '')) {
             $submission->forceFill(['grade' => $grade])->save();
         }
     }
 
-    private function calculateQuizGrade(Submission $submission): float
+    private function calculatequizGrade(Submission $submission): float
     {
         $submission->loadMissing(['assignment.questions', 'answers.question']);
         $questions = $submission->assignment->questions;

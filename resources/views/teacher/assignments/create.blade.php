@@ -34,7 +34,7 @@
     <div class="py-8">
         <div class="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
             <form method="POST" action="{{ route('teacher.assignments.store') }}" enctype="multipart/form-data" x-data="{
-                type: '{{ old('type', 'quiz') }}',
+                type: '{{ old('type', 'Trắc nghiệm') }}',
                 questions: {{ json_encode($oldQuestions) }},
                 attachmentName: '',
                 toast: { show: false, message: '', type: 'success' },
@@ -105,8 +105,8 @@
                         <div>
                             <label for="type" class="block text-sm font-medium text-gray-700">Loại bài tập</label>
                             <select id="type" name="type" x-model="type" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
-                                <option value="quiz">Trắc nghiệm</option>
-                                <option value="essay">Tự luận</option>
+                                <option value="Trắc nghiệm">Trắc nghiệm</option>
+                                <option value="Tự luận">Tự luận</option>
                             </select>
                         </div>
 
@@ -144,7 +144,7 @@
                     </div>
                 </div>
 
-                <div x-show="type === 'quiz'" class="bg-white p-6 shadow-sm sm:rounded-lg">
+                <div x-show="type === 'Trắc nghiệm'" class="bg-white p-6 shadow-sm sm:rounded-lg">
                     <div class="flex flex-col gap-3 border-b border-gray-100 pb-4 sm:flex-row sm:items-center sm:justify-between">
                         <h3 class="font-semibold text-gray-900">Câu hỏi trắc nghiệm</h3>
                         <div class="flex flex-wrap gap-3">
@@ -165,27 +165,27 @@
                             <div class="mt-4 grid gap-4 md:grid-cols-2">
                                 <div class="md:col-span-2">
                                     <label class="block text-sm font-medium text-gray-700">Nội dung câu hỏi</label>
-                                    <textarea :name="`questions[${idx}][question_text]`" x-model="question.question_text" rows="2" :required="type === 'quiz'" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"></textarea>
+                                    <textarea :name="`questions[${idx}][question_text]`" x-model="question.question_text" rows="2" :required="type === 'Trắc nghiệm'" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"></textarea>
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700">Đáp án A</label>
-                                    <input :name="`questions[${idx}][option_a]`" x-model="question.option_a" :required="type === 'quiz'" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                                    <input :name="`questions[${idx}][option_a]`" x-model="question.option_a" :required="type === 'Trắc nghiệm'" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700">Đáp án B</label>
-                                    <input :name="`questions[${idx}][option_b]`" x-model="question.option_b" :required="type === 'quiz'" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                                    <input :name="`questions[${idx}][option_b]`" x-model="question.option_b" :required="type === 'Trắc nghiệm'" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700">Đáp án C</label>
-                                    <input :name="`questions[${idx}][option_c]`" x-model="question.option_c" :required="type === 'quiz'" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                                    <input :name="`questions[${idx}][option_c]`" x-model="question.option_c" :required="type === 'Trắc nghiệm'" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700">Đáp án D</label>
-                                    <input :name="`questions[${idx}][option_d]`" x-model="question.option_d" :required="type === 'quiz'" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                                    <input :name="`questions[${idx}][option_d]`" x-model="question.option_d" :required="type === 'Trắc nghiệm'" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700">Đáp án đúng</label>
-                                    <select :name="`questions[${idx}][correct_option]`" x-model="question.correct_option" :required="type === 'quiz'" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                                    <select :name="`questions[${idx}][correct_option]`" x-model="question.correct_option" :required="type === 'Trắc nghiệm'" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
                                         <option value="A">A</option>
                                         <option value="B">B</option>
                                         <option value="C">C</option>
