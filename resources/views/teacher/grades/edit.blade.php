@@ -104,6 +104,71 @@
                 </div>
             @endif
 
+            {{-- Thắc mắc của học viên & Phản hồi giáo viên --}}
+            @if($submission->feedbacks->isNotEmpty())
+            <div class="bg-white p-6 shadow-sm sm:rounded-lg">
+                <h3 class="font-semibold text-gray-900 mb-4">💬 Thắc mắc của học viên ({{ $submission->feedbacks->count() }})</h3>
+                <div class="space-y-4">
+                    @foreach($submission->feedbacks as $feedback)
+                    <div class="border border-gray-200 rounded-lg p-4 {{ $feedback->teacher_reply ? 'bg-gray-50' : 'bg-amber-50 border-amber-200' }}">
+                        {{-- Học viên hỏi --}}
+                        <div class="flex items-start gap-3 mb-3">
+                            <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-semibold text-sm shrink-0">
+                                {{ mb_substr($feedback->user->name, 0, 1) }}
+                            </div>
+                            <div class="flex-1">
+                                <div class="flex items-center gap-2 mb-1">
+                                    <span class="text-sm font-semibold text-gray-800">{{ $feedback->user->name }}</span>
+                                    <span class="text-xs text-gray-400">{{ $feedback->created_at->format('d/m/Y H:i') }}</span>
+                                </div>
+                                <p class="text-sm text-gray-700">{{ $feedback->feedback_content }}</p>
+                            </div>
+                        </div>
+
+                        {{-- Giáo viên phản hồi --}}
+                        @if($feedback->teacher_reply)
+                            <div class="ml-11 pl-4 border-l-2 border-indigo-300">
+                                <div class="flex items-center gap-2 mb-1">
+                                    <span class="text-sm font-semibold text-indigo-700">Giáo viên phản hồi</span>
+                                    <span class="text-xs text-gray-400">{{ \Carbon\Carbon::parse($feedback->teacher_replied_at)->format('d/m/Y H:i') }}</span>
+                                </div>
+                                <p class="text-sm text-gray-700">{{ $feedback->teacher_reply }}</p>
+                                {{-- Cho phép sửa phản hồi --}}
+                                <form method="POST" action="{{ route('teacher.grades.feedback.reply', $feedback) }}" class="mt-2 flex gap-2">
+                                    @csrf
+                                    <input type="text" name="teacher_reply" value="{{ $feedback->teacher_reply }}"
+                                        class="flex-1 text-sm rounded border border-gray-300 px-2 py-1 focus:outline-none focus:ring-1 focus:ring-indigo-400">
+                                    <button type="submit" class="px-3 py-1 text-xs bg-indigo-600 text-white rounded hover:bg-indigo-700 transition">
+                                        Cập nhật
+                                    </button>
+                                </form>
+                            </div>
+                        @else
+                            <div class="ml-11">
+                                <form method="POST" action="{{ route('teacher.grades.feedback.reply', $feedback) }}" class="flex gap-2 items-end">
+                                    @csrf
+                                    <div class="flex-1">
+                                        <label class="block text-xs text-gray-500 mb-1">Nhập phản hồi của bạn:</label>
+                                        <textarea name="teacher_reply" rows="2"
+                                            class="w-full text-sm rounded border border-gray-300 px-3 py-2 focus:outline-none focus:ring-1 focus:ring-indigo-400"
+                                            placeholder="Nhập phản hồi cho học viên..."></textarea>
+                                        @error('teacher_reply')
+                                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                                        @enderror
+                                    </div>
+                                    <button type="submit"
+                                        class="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded hover:bg-indigo-700 transition mb-0.5">
+                                        Gửi
+                                    </button>
+                                </form>
+                            </div>
+                        @endif
+                    </div>
+                    @endforeach
+                </div>
+            </div>
+            @endif
+
             <form method="POST" action="{{ route('teacher.grades.update', $submission) }}" class="bg-white p-6 shadow-sm sm:rounded-lg">
                 @csrf
                 @method('PATCH')

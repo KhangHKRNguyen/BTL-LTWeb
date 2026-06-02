@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Teacher;
 
 use App\Models\Assignment;
+use App\Models\Feedback;
 use App\Models\Submission;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
@@ -46,6 +47,27 @@ class GradeController extends Controller
         return view('teacher.grades.submissions', compact('assignment', 'submissions'));
     }
 
+    // Giáo viên phản hồi lại thắc mắc của học viên
+    public function replyFeedback(Request $request, Feedback $feedback)
+    {
+        $request->validate([
+            'teacher_reply' => 'required|string|max:1000',
+        ], [
+            'teacher_reply.required' => 'Vui lòng nhập nội dung phản hồi.',
+        ]);
+
+        // Kiểm tra quyền: giáo viên phải phụ trách lớp của bài nộp này
+        $submission = $feedback->submission()->with('assignment.courseClass')->first();
+        $this->authorizeAssignment($submission->assignment);
+
+        $feedback->update([
+            'teacher_reply'      => $request->teacher_reply,
+            'teacher_replied_at' => now(),
+        ]);
+
+        return redirect()->back()->with('success', 'Đã gửi phản hồi tới học viên!');
+    }
+
     public function edit(Submission $submission)
     {
         $submission->load([
@@ -53,6 +75,7 @@ class GradeController extends Controller
             'assignment.courseClass',
             'assignment.questions',
             'answers.question',
+            'feedbacks.user',   // load thắc mắc của học viên
         ]);
 
         $this->authorizeAssignment($submission->assignment);

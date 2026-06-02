@@ -95,6 +95,7 @@ Route::middleware(['auth', 'role:teacher'])->prefix('teacher')->name('teacher.')
     // Quản lý tài liệu
     Route::get('/materials', [MaterialController::class, 'index'])->name('materials.index');
     Route::post('/materials', [MaterialController::class, 'store'])->name('materials.store');
+    Route::get('/materials/{material}/download', [MaterialController::class, 'download'])->name('materials.download');
     Route::delete('/materials/{material}', [MaterialController::class, 'destroy'])->name('materials.destroy');
 
     // Quản lý bài tập (Giao bài)
@@ -112,6 +113,7 @@ Route::middleware(['auth', 'role:teacher'])->prefix('teacher')->name('teacher.')
     Route::get('/assignments/{assignment}/submissions', [GradeController::class, 'submissions'])->name('grades.submissions');
     Route::get('/submissions/{submission}/grade', [GradeController::class, 'edit'])->name('grades.edit');
     Route::patch('/submissions/{submission}/grade', [GradeController::class, 'update'])->name('grades.update');
+    Route::post('/feedback/{feedback}/reply', [GradeController::class, 'replyFeedback'])->name('grades.feedback.reply');
 });
 
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
