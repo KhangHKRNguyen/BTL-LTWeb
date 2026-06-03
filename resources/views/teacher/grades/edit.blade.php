@@ -104,25 +104,82 @@
                 </div>
             @endif
 
-            <form method="POST" action="{{ route('teacher.grades.update', $submission) }}" class="bg-white p-6 shadow-sm sm:rounded-lg">
-                @csrf
-                @method('PATCH')
+            <div class="grid gap-6 lg:grid-cols-3">
+                <!-- Cột trái: Form chấm điểm (Chiếm 2/3 màn hình) -->
+                <div class="lg:col-span-2 space-y-6">
+                    <form method="POST" action="{{ route('teacher.grades.update', $submission) }}" class="bg-white p-6 shadow-sm sm:rounded-lg border border-slate-200">
+                        @csrf
+                        @method('PATCH')
 
-                <div class="grid gap-5 md:grid-cols-3">
-                    <div>
-                        <label for="grade" class="block text-sm font-medium text-gray-700">Điểm số</label>
-                        <input id="grade" type="number" name="grade" min="0" max="10" step="0.01" value="{{ old('grade', $submission->grade) }}" @if ($submission->assignment->isQuiz()) readonly @endif class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 @if ($submission->assignment->isQuiz()) bg-gray-100 @endif">
-                    </div>
-                    <div class="md:col-span-3">
-                        <label for="teacher_comment" class="block text-sm font-medium text-gray-700">Nhận xét</label>
-                        <textarea id="teacher_comment" name="teacher_comment" rows="4" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">{{ old('teacher_comment', $submission->teacher_comment) }}</textarea>
-                    </div>
+                        <div class="grid gap-5 md:grid-cols-3">
+                            <div>
+                                <label for="grade" class="block text-sm font-semibold text-gray-700">Điểm số</label>
+                                <input id="grade" type="number" name="grade" min="0" max="10" step="0.01" value="{{ old('grade', $submission->grade) }}" @if ($submission->assignment->isQuiz()) readonly @endif class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 @if ($submission->assignment->isQuiz()) bg-gray-100 @endif">
+                            </div>
+                            <div class="md:col-span-3">
+                                <label for="teacher_comment" class="block text-sm font-semibold text-gray-700">Nhận xét</label>
+                                <textarea id="teacher_comment" name="teacher_comment" rows="4" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" placeholder="Nhập nhận xét chi tiết của giáo viên tại đây...">{{ old('teacher_comment', $submission->teacher_comment) }}</textarea>
+                            </div>
+                        </div>
+
+                        <div class="mt-6 flex justify-end">
+                            <button class="rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700 transition shadow-sm">Hoàn tất chấm bài</button>
+                        </div>
+                    </form>
                 </div>
 
-                <div class="mt-6 flex justify-end">
-                    <button class="rounded-md bg-indigo-600 px-5 py-2 text-sm font-medium text-white hover:bg-indigo-700">Hoàn tất chấm bài</button>
+                <!-- Cột phải: Khung trao đổi thắc mắc điểm số (Chiếm 1/3 màn hình) -->
+                <div class="lg:col-span-1">
+                    <div class="bg-white border border-slate-200 rounded-xl shadow-sm flex flex-col h-[500px]">
+                        <div class="px-5 py-4 border-b border-slate-200 bg-slate-50 rounded-t-xl flex justify-between items-center">
+                            <h3 class="font-bold text-slate-700 text-sm">Trao đổi thắc mắc điểm số</h3>
+                            <span class="text-[10px] text-slate-400">Học viên & Giáo viên</span>
+                        </div>
+
+                        <!-- Danh sách tin nhắn thắc mắc -->
+                        <div class="flex-1 p-4 overflow-y-auto space-y-3 bg-slate-50/50">
+                            @forelse($submission->feedbacks as $feedback)
+                                <div class="flex flex-col {{ $feedback->user_id == auth()->id() ? 'items-end' : 'items-start' }}">
+                                    <div class="max-w-[85%] rounded-2xl px-3 py-2 text-xs shadow-sm
+                                        {{ $feedback->user_id == auth()->id() 
+                                            ? 'bg-indigo-600 text-white rounded-tr-none' 
+                                            : 'bg-white text-slate-800 border border-slate-200 rounded-tl-none' }}">
+                                        <p class="font-bold text-[10px] mb-0.5 opacity-75">
+                                            {{ $feedback->user->name }} ({{ $feedback->user->role == 'student' ? 'Học viên' : 'Giáo viên' }})
+                                        </p>
+                                        <p class="break-words font-medium">{{ $feedback->feedback_content }}</p>
+                                        
+                                        @if($feedback->old_grade !== null && $feedback->new_grade !== null)
+                                            <div class="mt-1.5 text-[10px] p-1 rounded bg-green-500/80 text-white border border-green-400 font-semibold text-center">
+                                                Hệ thống: Cập nhật điểm ({{ $feedback->old_grade }} &rarr; {{ $feedback->new_grade }})
+                                            </div>
+                                        @endif
+                                    </div>
+                                    <span class="text-[9px] text-slate-400 mt-0.5 px-1">
+                                        {{ $feedback->created_at->format('H:i d/m/Y') }}
+                                    </span>
+                                </div>
+                            @empty
+                                <div class="text-center text-slate-400 text-xs py-16">
+                                    Chưa có tin nhắn trao đổi nào cho bài chấm này.
+                                </div>
+                            @endforelse
+                        </div>
+
+                        <!-- Form gửi phản hồi từ giáo viên -->
+                        <div class="p-3 border-t border-slate-200 bg-white rounded-b-xl">
+                            <form action="{{ route('teacher.grades.feedback', $submission) }}" method="POST" class="flex space-x-2">
+                                @csrf
+                                <input type="text" name="feedback_content" required placeholder="Gõ phản hồi tới học viên..." 
+                                       class="flex-1 border border-slate-300 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-indigo-500 transition">
+                                <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs px-4 py-2 rounded-xl transition shadow-sm">
+                                    Gửi
+                                </button>
+                            </form>
+                        </div>
+                    </div>
                 </div>
-            </form>
+            </div>
         </div>
     </div>
 </x-app-layout>

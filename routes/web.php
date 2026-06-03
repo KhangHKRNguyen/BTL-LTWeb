@@ -104,6 +104,7 @@ Route::middleware(['auth', 'role:teacher'])->prefix('teacher')->name('teacher.')
     Route::get('/assignments/{assignment}/submissions', [GradeController::class, 'submissions'])->name('grades.submissions');
     Route::get('/submissions/{submission}/grade', [GradeController::class, 'edit'])->name('grades.edit');
     Route::patch('/submissions/{submission}/grade', [GradeController::class, 'update'])->name('grades.update');
+    Route::post('/submissions/{submission}/feedback', [GradeController::class, 'storeFeedback'])->name('grades.feedback');
 });
 
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
