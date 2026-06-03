@@ -75,14 +75,14 @@ class GradeController extends Controller
             'assignment.courseClass',
             'assignment.questions',
             'answers.question',
-            'feedbacks.user',   // load thắc mắc của học viên
+            'feedbacks.user',
         ]);
 
         $this->authorizeAssignment($submission->assignment);
 
-        if ($submission->assignment->isquiz()) {
-            $this->syncquizGrade($submission);
-            $submission->refresh()->load(['student', 'assignment.questions', 'answers.question']);
+        if ($submission->assignment->isQuiz()) {
+            $this->syncQuizGrade($submission);
+            $submission->refresh()->load(['student', 'assignment.questions', 'answers.question', 'feedbacks.user']);
         }
 
         return view('teacher.grades.edit', compact('submission'));
@@ -93,7 +93,9 @@ class GradeController extends Controller
         $submission->load(['assignment.questions', 'answers.question']);
         $this->authorizeAssignment($submission->assignment);
 
-        if ($submission->assignment->isquiz()) {
+        $oldGrade = $submission->grade;
+
+        if ($submission->assignment->isQuiz()) {
             $validated = $request->validate([
                 'teacher_comment' => ['nullable', 'string'],
             ]);
@@ -104,6 +106,8 @@ class GradeController extends Controller
                 'teacher_comment' => $validated['teacher_comment'] ?? null,
                 'status' => 'graded',
             ]);
+            
+            $newGrade = $grade;
         } else {
             $validated = $request->validate([
                 'grade' => ['required', 'numeric', 'min:0', 'max:10'],
@@ -115,6 +119,19 @@ class GradeController extends Controller
                 'teacher_comment' => $validated['teacher_comment'] ?? null,
                 'status' => 'graded',
             ]);
+            
+            $newGrade = $validated['grade'];
+        }
+
+        // Tự động log việc cập nhật điểm nếu có thay đổi điểm số
+        if ($oldGrade !== null && (float)$oldGrade !== (float)$newGrade) {
+            \App\Models\Feedback::create([
+                'feedback_content' => 'Giáo viên cập nhật điểm số mới.',
+                'old_grade' => $oldGrade,
+                'new_grade' => $newGrade,
+                'submission_id' => $submission->id,
+                'user_id' => Auth::id(),
+            ]);
         }
 
         return redirect()
@@ -122,7 +139,26 @@ class GradeController extends Controller
             ->with('success', 'Chấm bài thành công.');
     }
 
-    private function syncquizGrade(Submission $submission): void
+    public function storeFeedback(Request $request, Submission $submission)
+    {
+        $this->authorizeAssignment($submission->assignment);
+
+        $validated = $request->validate([
+            'feedback_content' => ['required', 'string', 'max:1000'],
+        ]);
+
+        \App\Models\Feedback::create([
+            'feedback_content' => $validated['feedback_content'],
+            'old_grade' => null,
+            'new_grade' => null,
+            'submission_id' => $submission->id,
+            'user_id' => Auth::id(),
+        ]);
+
+        return redirect()->back()->with('success', 'Gửi phản hồi thành công!');
+    }
+
+    private function syncQuizGrade(Submission $submission): void
     {
         if (! $submission->assignment->isquiz()) {
             return;
