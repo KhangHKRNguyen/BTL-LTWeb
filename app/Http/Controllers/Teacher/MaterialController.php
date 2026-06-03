@@ -18,7 +18,7 @@ class MaterialController extends Controller
         $classes = $teacher->classes;
 
         $selectedClass = null;
-        $materials = collect();
+        $materials     = collect();
 
         if ($request->filled('class_id')) {
             $selectedClass = CourseClass::where('id', $request->class_id)
@@ -45,7 +45,6 @@ class MaterialController extends Controller
 
         $teacher = Auth::user();
 
-        // Kiểm tra giáo viên thuộc lớp này
         $class = CourseClass::whereHas('users', fn($q) => $q->where('user_id', $teacher->id))
             ->findOrFail($request->class_id);
 
@@ -61,12 +60,31 @@ class MaterialController extends Controller
             ->with('success', 'Tài liệu đã được tải lên thành công!');
     }
 
+    // Download tài liệu qua PHP (không cần symlink)
+    public function download(Material $material)
+    {
+        $teacher = Auth::user();
+
+        // Chỉ giáo viên trong lớp mới được download
+        CourseClass::whereHas('users', fn($q) => $q->where('user_id', $teacher->id))
+            ->findOrFail($material->course_class_id);
+
+        if (!Storage::disk('public')->exists($material->file_path)) {
+            return back()->with('error', 'File không tồn tại trên máy chủ.');
+        }
+
+        $fullPath  = Storage::disk('public')->path($material->file_path);
+        $ext       = pathinfo($material->file_path, PATHINFO_EXTENSION);
+        $fileName  = $material->title . '.' . $ext;
+
+        return response()->download($fullPath, $fileName);
+    }
+
     // Xóa tài liệu
     public function destroy(Material $material)
     {
         $teacher = Auth::user();
 
-        // Kiểm tra giáo viên thuộc lớp của tài liệu này
         $class = CourseClass::whereHas('users', fn($q) => $q->where('user_id', $teacher->id))
             ->findOrFail($material->course_class_id);
 

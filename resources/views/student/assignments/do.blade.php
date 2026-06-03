@@ -1,8 +1,14 @@
+
 <x-app-layout>
     <div class="py-6 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
             
             <div class="lg:col-span-2 space-y-6">
+                
+                {{-- ✅ Hiển thị message success khi auto-submit --}}
+                @if(session('success'))
+                    <x-auth-session-status :status="session('success')" class="mb-4 p-4 bg-green-50 text-green-700 border border-green-200 rounded-lg shadow-sm font-medium" />
+                @endif
                 
                 <div>
                     <h1 class="text-2xl font-bold text-gray-900 tracking-tight">{{ $assignment->title }}</h1>
@@ -34,6 +40,9 @@
 
                 <form action="{{ route('student.assignments.store', $assignment->id) }}" method="POST" enctype="multipart/form-data" id="assignmentForm" class="space-y-6">
                     @csrf
+                    
+                    {{-- ✅ Hidden input để tracking auto-submit khi hết giờ --}}
+                    <input type="hidden" name="auto_submit" id="autoSubmitFlag" value="0">
 
                     @if($assignment->type === 'Trắc nghiệm')
                         <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
@@ -44,32 +53,78 @@
                             <div class="p-5 space-y-6 divide-y divide-gray-100">
                                 @foreach($assignment->questions as $question)
                                     @php
-                                        $userAnswer = $submission?->studentAnswers->where('question_id', $question->id)->first();
+                                        // ✅ DÒNG MỚI:
+$userAnswer = $submission ? $submission->studentAnswers->where('question_id', $question->id)->first() : null;
                                     @endphp
 
-                                    <div class="pt-6 first:pt-0">
+                                    <div class="pt-6 first:pt-0 question-block">
                                         <h6 class="font-bold text-gray-800 mb-4 text-sm leading-snug">
                                             Câu {{ $loop->iteration }}: {{ $question->question_text }}
                                         </h6>
 
                                         <div class="ms-2 space-y-2.5 max-w-2xl">
                                             @foreach(['A' => $question->option_a, 'B' => $question->option_b, 'C' => $question->option_c, 'D' => $question->option_d] as $key => $value)
-                                                <div class="flex items-start p-3 rounded-lg border border-gray-100 hover:bg-slate-50 transition duration-150">
-                                                    <input class="mt-0.5 text-indigo-600 focus:ring-indigo-500 border-gray-300" type="radio" 
+                                       @php
+                                // 1. Mặc định layout lúc đang làm bài
+                                $boxClass = 'border-gray-100 hover:bg-slate-50';
+                                $labelClass = 'text-gray-700';
+                                $badgeText = '';
+
+                                // 2. Khi hệ thống đã được ghi nhận bài nộp ($submission tồn tại)
+                                if ($submission) {
+                                    $isCorrectAnswer = ($key == $question->correct_option); 
+                                    $isStudentSelected = ($userAnswer && $userAnswer->selected_option == $key);
+
+                                    if ($isCorrectAnswer) {
+                                        // ĐÁP ÁN ĐÚNG -> Nhuộm màu xanh lá
+                                        $boxClass = 'bg-emerald-50 border-emerald-400 font-semibold';
+                                        $labelClass = 'text-emerald-800';
+                                        $badgeText = 'Đáp án đúng';
+                                    } elseif ($isStudentSelected && !$isCorrectAnswer) {
+                                        // HỌC VIÊN CHỌN SAI -> Nhuộm màu đỏ cảnh báo
+                                        $boxClass = 'bg-red-50 border-red-400 font-semibold';
+                                        $labelClass = 'text-red-800';
+                                        $badgeText = 'Bạn đã chọn';
+                                    } else {
+                                        // Các đáp án sai khác không được chọn -> Làm mờ đi
+                                        $boxClass = 'border-gray-200 opacity-60 bg-gray-50/50';
+                                        $labelClass = 'text-gray-400';
+                                    }
+                                }
+                            @endphp
+                                            
+                                            <div class="flex items-start p-3 rounded-lg border border-gray-100 hover:bg-slate-50 transition duration-150 {{ $boxClass }}">
+                                                    <input class="q-radio mt-0.5 text-indigo-600 focus:ring-indigo-500 border-gray-300" type="radio" 
                                                            name="answers[{{ $loop->parent->index }}][selected_option]" 
                                                            value="{{ $key }}" id="q{{ $question->id }}_{{ strtolower($key) }}"
                                                            @checked($userAnswer?->selected_option === $key)
-                                                           @disabled($submission)>
-                                                    <label class="ms-3 text-sm text-gray-700 font-medium cursor-pointer w-full" for="q{{ $question->id }}_{{ strtolower($key) }}">
-                                                        <span class="font-bold text-gray-400 me-1">{{ $key }}.</span> {{ $value }}
+                                                           @disabled($submission || now() > $assignment->due_time)>
+                                                    <label class="ms-3 text-sm text-gray-700 font-medium cursor-pointer w-full flex justify-between items-center {{ $labelClass }}" for="q{{ $question->id }}_{{ strtolower($key) }}">
+                                                        <div>
+                                                            <span class="font-bold text-gray-400 me-1 {{ $submission ? $labelClass : '' }}">{{ $key }}.</span> {{ $value }}
+                                                        </div>
+                                                        
+                                                        @if($badgeText)
+                                                            <span class="text-[11px] font-bold px-2 py-0.5 rounded-md {{ $key == $question->correct_option ? 'bg-emerald-200 text-emerald-800' : 'bg-red-200 text-red-800' }}">
+                                                                {{ $badgeText }}
+                                                            </span>
+                                                        @endif
                                                     </label>
                                                 </div>
+
+
+
+
                                             @endforeach
                                         </div>
 
                                         <input type="hidden" name="answers[{{ $loop->index }}][question_id]" value="{{ $question->id }}">
-                                    </div>
-                                @endforeach
+
+        <div class="error-message text-xs text-red-600 font-semibold mt-2 hidden ms-2">
+            Bạn chưa chọn đáp án cho câu hỏi này!
+        </div>
+    </div>
+@endforeach
                             </div>
                         </div>
 
@@ -84,36 +139,60 @@
                                     <textarea id="submission_content" name="submission_content" rows="6" 
                                               class="block w-full mt-1 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm text-sm" 
                                               placeholder="Gõ trực tiếp câu trả lời của bạn tại đây..."
-                                              @disabled($submission)>{{ $submission?->submission_content }}</textarea>
+                                              @disabled($submission || now() > $assignment->due_time)>{{ $submission?->submission_content }}</textarea>
                                     <x-input-error :messages="$errors->get('submission_content')" class="mt-1" />
                                 </div>
 
                                 <div class="pt-2">
-                                    <x-input-label for="file" value="Tải lên tệp đính kèm bài làm (Tối đa 10MB)" />
+                                    <x-input-label for="file" value="Tải lên tệp đính kèm bài làm (Tối đa 50MB)" />
                                     <input type="file" id="file" name="file"
                                            class="block w-full mt-1 text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-slate-100 file:text-slate-700 hover:file:bg-slate-200 border border-gray-300 rounded-md shadow-sm p-1 bg-white"
-                                           accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png"
-                                           @disabled($submission)>
-                                    <span class="text-[11px] text-gray-400 block mt-1">Định dạng hỗ trợ: PDF, DOC, DOCX, TXT, JPG, PNG</span>
+                                           accept=".pdf,.docx,.zip"
+                                           @disabled($submission || now() > $assignment->due_time)>
+                                    <span class="text-[11px] text-gray-400 block mt-1">Định dạng hỗ trợ: PDF, DOCX, ZIP</span>
                                     <x-input-error :messages="$errors->get('file')" class="mt-1" />
 
                                     @if($submission?->file_path)
-                                        <div class="mt-3 p-3 bg-slate-50 border border-slate-200 rounded-lg flex items-center justify-between text-xs">
-                                            <span class="text-gray-600 font-medium">Bài làm đính kèm đã lưu:</span>
-                                            <a href="{{ asset($submission->file_path) }}" target="_blank">
-                                                <x-secondary-button type="button" class="py-1 px-2.5 text-[10px]">Xem file</x-secondary-button>
-                                            </a>
-                                        </div>
-                                    @endif
+
+    @php
+        $extension = strtolower(pathinfo($submission->file_path, PATHINFO_EXTENSION));
+    @endphp
+
+    <div class="mt-3 p-3 bg-slate-50 border border-slate-200 rounded-lg">
+        <span class="text-gray-600 font-medium block mb-2">
+            Bài làm đính kèm đã lưu:
+        </span>
+
+      
+
+            <a href="{{ route('student.submissions.view', $submission->id) }}"
+   target="_blank">
+                <x-secondary-button
+                    type="button"
+                    class="py-1 px-2.5 text-[10px]">
+                    Xem file
+                </x-secondary-button>
+            </a>
+
+     
+    </div>
+
+@endif
                                 </div>
                             </div>
                         </div>
                     @endif
 
                     @if($submission && $submission->grade !== null)
-                        <div class="bg-white border border-emerald-200 rounded-xl shadow-sm overflow-hidden border-l-4 !border-l-emerald-500">
-                            <div class="px-5 py-3 bg-emerald-50 text-emerald-800 font-bold text-sm">
-                                Kết quả chấm điểm từ Giáo viên
+                        @php
+                            $isAutoGraded = str_contains($submission->status, 'Tự động');
+                        @endphp
+                        <div class="bg-white border {{ $isAutoGraded ? 'border-blue-200' : 'border-emerald-200' }} rounded-xl shadow-sm overflow-hidden border-l-4 !{{ $isAutoGraded ? 'border-l-blue-500' : 'border-l-emerald-500' }}">
+                            <div class="px-5 py-3 {{ $isAutoGraded ? 'bg-blue-50 text-blue-800' : 'bg-emerald-50 text-emerald-800' }} font-bold text-sm flex items-center justify-between">
+                                <span>{{ $isAutoGraded ? 'Kết quả tự động chấm' : 'Kết quả chấm điểm từ Giáo viên' }}</span>
+                                @if($isAutoGraded)
+                                    <span class="px-2 py-1 bg-blue-100 text-blue-700 text-xs font-bold rounded-full">Tự động</span>
+                                @endif
                             </div>
                             <div class="p-5 space-y-2 text-sm">
                                 <p class="text-gray-700">
@@ -130,16 +209,16 @@
                         </div>
                     @endif
 
-                    <x-input-error :messages="$errors->all()" class="mb-2" />
+                
 
                     <div class="flex flex-col sm:flex-row justify-between gap-3 items-center pt-4 border-t border-gray-100">
-                        @if($submission)
+                        @if($submission || now() > $assignment->due_time)
                             <a href="{{ route('student.assignments.index') }}" class="w-full sm:w-auto">
-                                <x-secondary-button type="button" class="w-full justify-center">← Quay lại danh sách</x-secondary-button>
+                                <x-secondary-button type="button" class="w-full justify-center">Quay lại danh sách</x-secondary-button>
                             </a>
                         @else
                             <x-secondary-button type="button" x-data x-on:click="$dispatch('open-modal', 'confirm-back-assignment')" class="w-full sm:w-auto justify-center">
-                                ← Quay lại danh sách
+                               Quay lại danh sách
                             </x-secondary-button>
                         @endif
                         
@@ -148,13 +227,38 @@
                                 Bài làm đã được ghi nhận
                             </button>
                         @elseif(now() <= $assignment->due_time)
-                            <x-primary-button type="submit" id="submitBtn">✓ Nộp bài làm</x-primary-button>
+                            <x-primary-button type="button" id="submitBtn">
+   Nộp bài làm
+</x-primary-button>
                         @else
-                            <button type="button" class="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 bg-red-100 border border-transparent rounded-md font-semibold text-xs text-red-500 uppercase tracking-widest shadow-sm cursor-not-allowed" disabled>❌ Quá hạn nộp bài</button>
+                            <button type="button" class="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 bg-red-100 border border-transparent rounded-md font-semibold text-xs text-red-500 uppercase tracking-widest shadow-sm cursor-not-allowed" disabled>Quá hạn nộp bài</button>
                         @endif
                     </div>
                 </form>
+<x-modal name="confirm-submit-assignment" maxWidth="md">
+    <div class="p-6">
+        <div class="flex items-center gap-3 text-indigo-600 mb-3">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            <h3 class="text-lg font-bold text-gray-900">Xác nhận nộp bài tập</h3>
+        </div>
+        
+        <p class="text-sm text-gray-600 mb-6 leading-relaxed">
+            Bạn có chắc chắn muốn nộp bài tập này không?  Sau khi nộp, hệ thống sẽ ghi nhận thời gian và bạn sẽ không thể chỉnh sửa câu trả lời được nữa[cite: 82].
+        </p>
 
+        <div class="flex items-center justify-end gap-3 pt-3 border-t border-gray-100">
+            <x-secondary-button type="button" x-data x-on:click="$dispatch('close-modal', 'confirm-submit-assignment')">
+                Kiểm tra lại bài
+            </x-secondary-button>
+
+            <x-primary-button type="button" onclick="document.getElementById('assignmentForm').submit();">
+                Đồng ý nộp bài
+            </x-primary-button>
+        </div>
+    </div>
+</x-modal>
                 <x-modal name="confirm-back-assignment" maxWidth="md">
                     <div class="p-6">
                         <div class="flex items-center gap-3 text-red-500 mb-3">
@@ -195,8 +299,8 @@
                             </ul>
                         @else
                             <ul class="list-disc ps-4 space-y-1.5">
-                                <li>Bạn có thể soạn thảo trực tiếp văn bản hoặc tải lên file Word/PDF đính kèm.</li>
-                                <li>Dung lượng file đính kèm không được vượt quá mốc 10MB.</li>
+                                <li>Bạn có thể soạn thảo trực tiếp văn bản hoặc tải lên file đính kèm.</li>
+                                <li>Dung lượng file đính kèm không được vượt quá mốc 20MB.</li>
                                 <li>Hệ thống cho phép nộp cập nhật ghi đè bài cũ nếu còn trong thời hạn.</li>
                             </ul>
                         @endif
@@ -216,28 +320,86 @@
         </div>
     </div>
 
-    <script>
-        function updateCountdown() {
-            const dueDate = new Date('{{ $assignment->due_time }}');
-            const now = new Date();
-            const diff = dueDate - now;
+<script>
+    const dueDate = new Date('{{ $assignment->due_time }}');
+    const isAlreadyOverdue = (dueDate - new Date()) <= 0;
+    const countdownEl = document.getElementById('countdown');
 
-            if (diff <= 0) {
-                document.getElementById('countdown').textContent = 'Đã hết hạn nộp bài!';
-                document.getElementById('submitBtn')?.setAttribute('disabled', 'disabled');
+    @if($submission)
+        if (countdownEl) {
+            countdownEl.textContent = 'Bài tập đã hoàn thành!';
+            countdownEl.classList.add('text-emerald-600');
+        }
+    @else
+        if (isAlreadyOverdue) {
+            if (countdownEl) {
+                countdownEl.textContent = 'Đã hết hạn nộp bài!';
+                countdownEl.classList.add('text-red-600');
+            }
+        } else {
+            function updateCountdown() {
+                const diff = dueDate - new Date();
+                if (diff <= 0) {
+                    if (countdownEl) {
+                        countdownEl.textContent = 'Đã hết hạn nộp bài!';
+                        countdownEl.classList.add('text-red-600');
+                    }
+                    clearInterval(countdownInterval);
+                    document.getElementById('autoSubmitFlag').value = '1';
+                    document.getElementById('assignmentForm').submit();
+                    return;
+                }
+                const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+                const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+                if (countdownEl) {
+                    countdownEl.textContent = `${days} ngày ${hours} giờ ${minutes} phút ${seconds} giây`;
+                }
+            }
+            updateCountdown();
+            const countdownInterval = setInterval(updateCountdown, 1000);
+        }
+    @endif
+
+    const submitBtnEl = document.getElementById('submitBtn');
+    if (submitBtnEl) {
+        submitBtnEl.addEventListener('click', function(e) {
+            e.preventDefault();
+
+            if ("{{ $assignment->type }}" !== 'Trắc nghiệm') {
+                const content = document.getElementById('submission_content')?.value.trim();
+                const fileSelected = document.getElementById('file')?.files.length > 0;
+                if (!content && !fileSelected) {
+                    alert('Vui lòng nhập nội dung bài làm hoặc tải lên tệp đính kèm.');
+                    return;
+                }
+                window.dispatchEvent(new CustomEvent('open-modal', { detail: 'confirm-submit-assignment' }));
                 return;
             }
 
-            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-            const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+            let hasError = false;
+            document.querySelectorAll('.question-block').forEach(block => {
+                const radios = block.querySelectorAll('.q-radio');
+                const isChecked = [...radios].some(r => r.checked);
+                const errorDiv = block.querySelector('.error-message');
+                if (!isChecked) {
+                    errorDiv.classList.remove('hidden');
+                    block.classList.add('bg-red-50/50', 'p-4', 'rounded-xl', 'border', 'border-red-100');
+                    hasError = true;
+                } else {
+                    errorDiv.classList.add('hidden');
+                    block.classList.remove('bg-red-50/50', 'p-4', 'rounded-xl', 'border', 'border-red-100');
+                }
+            });
 
-            document.getElementById('countdown').textContent = 
-                `${days} ngày ${hours} giờ ${minutes} phút ${seconds} giây`;
-        }
-
-        updateCountdown();
-        setInterval(updateCountdown, 1000);
-    </script>
+            if (hasError) {
+                const firstError = document.querySelector('.error-message:not(.hidden)');
+                if (firstError) firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            } else {
+                window.dispatchEvent(new CustomEvent('open-modal', { detail: 'confirm-submit-assignment' }));
+            }
+        });
+    }
+</script>
 </x-app-layout>

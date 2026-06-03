@@ -156,7 +156,7 @@
                 "phpstan/phpstan": "^0.12.42",
                 "phpunit/phpunit": "^7.5 || ^8.5 || ^9.3",
                 "scrutinizer/ocular": "1.6.0",
-                "squizlabs/php_codesniffer": "^3.5",
+                "sTrắc nghiệmlabs/php_codesniffer": "^3.5",
                 "vimeo/psalm": "^4.0.0"
             },
             "type": "library",
@@ -529,7 +529,7 @@
             "require-dev": {
                 "phpstan/phpstan": "^2",
                 "phpunit/phpunit": "^9",
-                "squizlabs/php_codesniffer": "^4"
+                "sTrắc nghiệmlabs/php_codesniffer": "^4"
             },
             "type": "library",
             "extra": {
@@ -2164,7 +2164,7 @@
                 "phpstan/extension-installer": "^1.4.3",
                 "phpstan/phpstan": "^2.1.22",
                 "phpunit/phpunit": "^10.5.53",
-                "squizlabs/php_codesniffer": "^3.13.4 || ^4.0.0"
+                "sTrắc nghiệmlabs/php_codesniffer": "^3.13.4 || ^4.0.0"
             },
             "bin": [
                 "bin/carbon"
@@ -3262,7 +3262,7 @@
                 "phpstan/phpstan-phpunit": "^2.0",
                 "phpunit/phpunit": "^9.6",
                 "slevomat/coding-standard": "^8.18",
-                "squizlabs/php_codesniffer": "^3.13"
+                "sTrắc nghiệmlabs/php_codesniffer": "^3.13"
             },
             "suggest": {
                 "ext-bcmath": "Enables faster math with arbitrary-precision integers using BCMath.",

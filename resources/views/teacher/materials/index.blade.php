@@ -117,8 +117,7 @@
                                         </td>
                                         <td class="px-4 py-3">
                                             <div class="flex items-center justify-center gap-3">
-                                                <a href="{{ Storage::url($material->file_path) }}"
-                                                    target="_blank"
+                                                <a href="{{ route('teacher.materials.download', $material->id) }}"
                                                     class="text-blue-600 hover:text-blue-800 text-xs font-medium transition">
                                                     Tải xuống
                                                 </a>
