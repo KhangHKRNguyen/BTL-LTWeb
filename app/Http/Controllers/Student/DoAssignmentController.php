@@ -28,6 +28,7 @@ class DoAssignmentController extends Controller
 $studentClasses = \App\Models\CourseClass::whereIn('id', $classIds)->get();
         // Lấy danh sách assignments của các lớp
         $query = Assignment::whereIn('course_class_id', $classIds)
+            ->where('is_visible', true)
             ->with(['courseClass', 'submissions' => function($q) {
                 $q->where('user_id', auth()->id());
             }]);
@@ -47,6 +48,10 @@ $studentClasses = \App\Models\CourseClass::whereIn('id', $classIds)->get();
     public function show($assignmentId)
     {
         $assignment = Assignment::with(['questions', 'courseClass'])->findOrFail($assignmentId);
+
+        if (!$assignment->is_visible) {
+            abort(404, 'Bài tập này đã bị giáo viên ẩn hoặc không tồn tại.');
+        }
 
         // Kiểm tra học viên có quyền làm bài này không
         $userClassIds = auth()->user()->courseClasses()->pluck('course_classes.id');
@@ -93,11 +98,14 @@ $studentClasses = \App\Models\CourseClass::whereIn('id', $classIds)->get();
     public function store(Request $request, $assignmentId)
     {
         $assignment = Assignment::findOrFail($assignmentId);
+        if (!$assignment->is_visible) {
+            abort(404, 'Bài tập này đã bị ẩn, bạn không thể nộp bài.');
+        }
         $isOverdue = now() > $assignment->due_time;
 
         // Validate theo loại bài tập
         if ($assignment->type === 'Trắc nghiệm') {
-            // ✅ FIX: Khi hết giờ (auto-submit) → Chấp nhận partial/no answers
+            // FIX: Khi hết giờ (auto-submit) → Chấp nhận partial/no answers
             // Khi chưa hết giờ → Yêu cầu đầy đủ
             $answerRules = $isOverdue 
                 ? 'nullable|array'  // Chấp nhận 0 answers hoặc partial

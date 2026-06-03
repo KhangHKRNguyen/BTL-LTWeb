@@ -106,6 +106,7 @@ Route::middleware(['auth', 'role:teacher'])->prefix('teacher')->name('teacher.')
     Route::get('/assignments/{assignment}', [AssignmentController::class, 'show'])->name('assignments.show');
     Route::get('/assignments/{assignment}/export', [AssignmentController::class, 'export'])->name('assignments.export');
     Route::get('/assignments/{assignment}/download-attachment', [AssignmentController::class, 'downloadAttachment'])->name('assignments.download-attachment');
+    Route::patch('/assignments/{assignment}/toggle-visibility', [AssignmentController::class, 'toggleVisibility'])->name('assignments.toggle-visibility');
 
     // Quản lý điểm số và Chấm bài
     Route::get('/grades', [GradeController::class, 'index'])->name('grades.index');
