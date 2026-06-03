@@ -22,6 +22,7 @@ class Assignment extends Model
         'due_time',
         'file_path',
         'course_class_id',
+        'is_visible',
     ];
 
     /**
@@ -32,6 +33,7 @@ class Assignment extends Model
         return [
             'open_time' => 'datetime',
             'due_time' => 'datetime',
+            'is_visible' => 'boolean',
         ];
     }
 

@@ -218,4 +218,17 @@ class AssignmentController extends Controller
             403
         );
     }
+    public function toggleVisibility(Assignment $assignment)
+    {
+        $this->authorizeAssignment($assignment);
+
+        // Đảo ngược trạng thái hiện tại
+        $assignment->update([
+            'is_visible' => !$assignment->is_visible
+        ]);
+
+        $statusLabel = $assignment->is_visible ? 'hiển thị' : 'ẩn';
+
+        return redirect()->back()->with('success', "Đã chuyển bài tập sang trạng thái: " . mb_ucfirst($statusLabel));
+    }
 }

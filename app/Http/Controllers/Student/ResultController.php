@@ -16,9 +16,12 @@ class ResultController extends Controller
     public function index()
     {
         // Lấy danh sách các bài đã chấm của học viên đang đăng nhập
-        $results = Submission::with('assignment.courseClass')
+        $results = Submission::whereHas('assignment', function($q) {
+                $q->where('is_visible', true);
+            })
+            ->with('assignment.courseClass')
             ->where('user_id', Auth::id())
-            ->where('status', 'graded')
+            ->whereIn('status', ['graded', 'Đã chấm (Tự động)', 'Đã chấm'])
             ->get();
 
         return view('student.results.index', compact('results'));
@@ -32,6 +35,10 @@ class ResultController extends Controller
         $submission = Submission::with(['assignment.courseClass', 'feedbacks.user'])
             ->where('user_id', Auth::id())
             ->findOrFail($id);
+
+        if (!$submission->assignment || !$submission->assignment->is_visible) {
+            abort(404, 'Kết quả bài tập này hiện không khả dụng do bài tập đã bị ẩn.');
+        }
 
         return view('student.results.show', compact('submission'));
     }

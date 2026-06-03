@@ -46,7 +46,7 @@
                                             <th class="px-4 py-3">Tiêu đề</th>
                                             <th class="px-4 py-3">Loại</th>
                                             <th class="px-4 py-3">Hạn nộp</th>
-                                            <th class="px-4 py-3"></th>
+                                            <th class="px-4 py-3">Trạng thái</th> <th class="px-4 py-3"></th>
                                         </tr>
                                     </thead>
                                     <tbody class="divide-y divide-gray-100 bg-white">
@@ -55,13 +55,32 @@
                                                 <td class="px-4 py-3 font-medium text-gray-900">{{ $assignment->title }}</td>
                                                 <td class="px-4 py-3 text-gray-600">{{ $assignment->typeLabel() }}</td>
                                                 <td class="px-4 py-3 text-gray-600">{{ optional($assignment->due_time)->format('d/m/Y H:i') }}</td>
+                                                
+                                                <td class="px-4 py-3">
+                                                    @if($assignment->is_visible)
+                                                        <span class="inline-flex items-center rounded-md bg-green-50 px-2 py-1 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20">Đang hiện</span>
+                                                    @else
+                                                        <span class="inline-flex items-center rounded-md bg-red-50 px-2 py-1 text-xs font-medium text-red-700 ring-1 ring-inset ring-red-600/20">Đang ẩn</span>
+                                                    @endif
+                                                </td>
+
                                                 <td class="px-4 py-3 text-right">
-                                                    <a href="{{ route('teacher.assignments.show', $assignment) }}" class="text-indigo-600 hover:text-indigo-800">Chi tiết</a>
+                                                    <div class="flex items-center justify-end gap-3">
+                                                        <form action="{{ route('teacher.assignments.toggle-visibility', $assignment) }}" method="POST" class="inline">
+                                                            @csrf
+                                                            @method('PATCH')
+                                                            <button type="submit" class="text-sm font-medium {{ $assignment->is_visible ? 'text-amber-600 hover:text-amber-900' : 'text-emerald-600 hover:text-emerald-900' }}">
+                                                                {{ $assignment->is_visible ? 'Ẩn đi' : 'Bỏ ẩn' }}
+                                                            </button>
+                                                        </form>
+                                                        
+                                                        <a href="{{ route('teacher.assignments.show', $assignment) }}" class="text-indigo-600 hover:text-indigo-800 font-medium">Chi tiết</a>
+                                                    </div>
                                                 </td>
                                             </tr>
                                         @empty
                                             <tr>
-                                                <td colspan="4" class="px-4 py-4 text-center text-gray-500">Chưa có bài tập.</td>
+                                                <td colspan="5" class="px-4 py-4 text-center text-gray-500">Chưa có bài tập.</td>
                                             </tr>
                                         @endforelse
                                     </tbody>
