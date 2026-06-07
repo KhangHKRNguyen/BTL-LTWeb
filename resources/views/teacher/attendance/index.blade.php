@@ -35,21 +35,72 @@
             </form>
         </div>
 
-        {{-- Bảng điểm danh --}}
-        @if($selectedClass)
+        @if(!$selectedClass)
+            {{-- Empty state --}}
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 py-20 flex flex-col items-center text-center">
+                <div class="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center mb-4">
+                    <svg class="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    </svg>
+                </div>
+                <p class="text-slate-600 font-semibold">Chọn lớp và ngày để bắt đầu điểm danh</p>
+                <p class="text-slate-400 text-sm mt-1 max-w-xs">Danh sách học viên và trạng thái điểm danh sẽ hiện ra sau khi bạn chọn lớp học</p>
+            </div>
+        @else
+            {{-- Thống kê nhanh --}}
+            @php
+                $totalCount   = $students->count();
+                $presentCount = 0;
+                $absentCount  = 0;
+                $lateCount    = 0;
+                foreach ($students as $_s) {
+                    $_hasLeave = !is_null($leaveRequests->get($_s->id));
+                    $_default  = $_hasLeave ? 'Vắng' : 'Có mặt';
+                    $_status   = $existingAttendances->get($_s->id, $_default);
+                    if ($_status === 'Có mặt') $presentCount++;
+                    elseif ($_status === 'Vắng') $absentCount++;
+                    elseif ($_status === 'Muộn') $lateCount++;
+                }
+            @endphp
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-4 text-center">
+                    <p class="text-2xl font-bold text-slate-700">{{ $totalCount }}</p>
+                    <p class="text-xs text-slate-400 mt-0.5">Tổng học viên</p>
+                </div>
+                <div class="bg-white rounded-xl border border-emerald-200 shadow-sm p-4 text-center">
+                    <p class="text-2xl font-bold text-emerald-600">{{ $presentCount }}</p>
+                    <p class="text-xs text-emerald-400 mt-0.5">Có mặt</p>
+                </div>
+                <div class="bg-white rounded-xl border border-rose-200 shadow-sm p-4 text-center">
+                    <p class="text-2xl font-bold text-rose-600">{{ $absentCount }}</p>
+                    <p class="text-xs text-rose-400 mt-0.5">Vắng</p>
+                </div>
+                <div class="bg-white rounded-xl border border-amber-200 shadow-sm p-4 text-center">
+                    <p class="text-2xl font-bold text-amber-600">{{ $lateCount }}</p>
+                    <p class="text-xs text-amber-400 mt-0.5">Muộn</p>
+                </div>
+            </div>
+
+            {{-- Bảng điểm danh --}}
             @php $hasLeave = $leaveRequests->isNotEmpty(); @endphp
 
             <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
-                <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center justify-between mb-4 flex-wrap gap-3">
                     <h2 class="text-base font-semibold text-slate-700">
                         Lớp: <span class="text-blue-600">{{ $selectedClass->class_name }}</span>
                         &mdash; Ngày: <span class="text-blue-600">{{ \Carbon\Carbon::parse($attendanceDate)->format('d/m/Y') }}</span>
                     </h2>
-                    @if($hasLeave)
-                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-100 text-amber-700 text-xs font-semibold">
-                            ⚠ Có {{ $leaveRequests->count() }} đơn báo nghỉ hôm nay
-                        </span>
-                    @endif
+                    <div class="flex items-center gap-2 flex-wrap">
+                        @if($hasLeave)
+                            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-100 text-amber-700 text-xs font-semibold">
+                                ⚠ Có {{ $leaveRequests->count() }} đơn báo nghỉ hôm nay
+                            </span>
+                        @endif
+                        <button type="button" id="btnSelectAll"
+                            class="px-3 py-1.5 text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-lg hover:bg-emerald-100 transition">
+                            ✓ Tất cả có mặt
+                        </button>
+                    </div>
                 </div>
 
                 @if($students->isEmpty())
@@ -73,14 +124,11 @@
                                 <tbody class="divide-y divide-slate-100">
                                     @foreach($students as $i => $student)
                                         @php
-                                            $leaveReason = $leaveRequests->get($student->id);
+                                            $leaveReason     = $leaveRequests->get($student->id);
                                             $hasStudentLeave = !is_null($leaveReason);
-
-                                            // Nếu có đơn báo nghỉ và chưa điểm danh → mặc định Vắng
-                                            $defaultStatus = $hasStudentLeave ? 'Vắng' : 'Có mặt';
-                                            $current = $existingAttendances->get($student->id, $defaultStatus);
-
-                                            $statusColors = [
+                                            $defaultStatus   = $hasStudentLeave ? 'Vắng' : 'Có mặt';
+                                            $current         = $existingAttendances->get($student->id, $defaultStatus);
+                                            $statusColors    = [
                                                 'Có mặt' => 'peer-checked:bg-emerald-500 peer-checked:border-emerald-500',
                                                 'Vắng'   => 'peer-checked:bg-rose-500 peer-checked:border-rose-500',
                                                 'Muộn'   => 'peer-checked:bg-amber-500 peer-checked:border-amber-500',
@@ -140,4 +188,10 @@
         @endif
 
     </div>
+
+    <script>
+        document.getElementById('btnSelectAll')?.addEventListener('click', function () {
+            document.querySelectorAll('input[type="radio"][value="Có mặt"]').forEach(r => r.checked = true);
+        });
+    </script>
 </x-app-layout>
