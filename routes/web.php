@@ -156,7 +156,6 @@ Route::get('/captcha-image', function () {
         $captchaString .= $charset[random_int(0, strlen($charset) - 1)];
     }
 
-    // LƯU Ý: Thay vì dùng $_SESSION, ta dùng helper session() của Laravel
     session(['captcha_code' => $captchaString]);
 
     // 2. Tạo kích thước khung ảnh
@@ -183,7 +182,7 @@ Route::get('/captcha-image', function () {
         imageline($image, random_int(0, $width), random_int(0, $height), random_int(0, $width), random_int(0, $height), $noiseColor);
     }
 
-    // 5. Vẽ chữ lên hình (sử dụng font mặc định imagestring để không lo lỗi đường dẫn file ttf trên local)
+    // 5. Vẽ chữ lên hình
     $charSpace = (int)($width / $length);
     for ($i = 0; $i < strlen($captchaString); $i++) {
         $char = $captchaString[$i];
@@ -192,7 +191,6 @@ Route::get('/captcha-image', function () {
         imagestring($image, 5, $x, (int)($height / 4) + random_int(-5, 5), $char, $color);
     }
 
-    // 6. Dùng bộ đệm (Buffer) để bắt xuất dữ liệu ảnh dưới dạng Response chuẩn của Laravel
     ob_start();
     imagepng($image);
     $imageData = ob_get_clean();
