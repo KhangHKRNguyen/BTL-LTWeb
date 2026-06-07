@@ -10,12 +10,10 @@ use Illuminate\Validation\Rule;
 
 class AccountController extends Controller
 {
-    // Danh sách tài khoản
     public function index(Request $request)
     {
         $query = User::query();
 
-        // Tìm kiếm theo tên hoặc email
         if ($request->filled('search')) {
             $query->where(function ($q) use ($request) {
                 $q->where('name', 'like', '%' . $request->search . '%')
@@ -23,7 +21,6 @@ class AccountController extends Controller
             });
         }
 
-        // Lọc theo vai trò
         if ($request->filled('role')) {
             $query->where('role', $request->role);
         }
@@ -33,13 +30,11 @@ class AccountController extends Controller
         return view('admin.accounts.index', compact('users'));
     }
 
-    // Form tạo tài khoản
     public function create()
     {
         return view('admin.accounts.create');
     }
 
-    // Lưu tài khoản mới
     public function store(Request $request)
     {
         $request->validate([
@@ -57,7 +52,7 @@ class AccountController extends Controller
         User::create([
             'name'     => $request->name,
             'email'    => $request->email,
-            'password' => Hash::make('1'), // Mật khẩu mặc định là 1
+            'password' => Hash::make('1'),
             'role'     => $request->role,
             'status'   => 'active',
         ]);
@@ -66,13 +61,12 @@ class AccountController extends Controller
                          ->with('success', 'Tạo tài khoản thành công! Mật khẩu mặc định: 1');
     }
 
-    // Form sửa tài khoản
     public function edit(User $user)
     {
         return view('admin.accounts.edit', compact('user'));
     }
 
-    // Cập nhật tài khoản
+    // FIX 2: Chặn đổi role của chính mình và admin khác
     public function update(Request $request, User $user)
     {
         $request->validate([
@@ -83,6 +77,18 @@ class AccountController extends Controller
             'role.required' => 'Vui lòng chọn vai trò.',
         ]);
 
+        // Không cho đổi role của chính mình
+        if ($user->id === auth()->id() && $request->role !== $user->role) {
+            return redirect()->route('admin.accounts.index')
+                             ->with('error', 'Bạn không thể thay đổi vai trò của chính mình!');
+        }
+
+        // Không cho đổi role của admin khác
+        if ($user->role === 'admin' && $user->id !== auth()->id() && $request->role !== 'admin') {
+            return redirect()->route('admin.accounts.index')
+                             ->with('error', 'Không thể thay đổi vai trò của tài khoản Admin khác!');
+        }
+
         $user->update([
             'name' => $request->name,
             'role' => $request->role,
@@ -92,27 +98,36 @@ class AccountController extends Controller
                          ->with('success', 'Cập nhật tài khoản thành công!');
     }
 
-    // Xóa mềm tài khoản
     public function destroy(User $user)
     {
-        // Không cho xóa chính mình
         if ($user->id === auth()->id()) {
             return redirect()->route('admin.accounts.index')
                              ->with('error', 'Bạn không thể xóa tài khoản của chính mình!');
         }
 
-        $user->delete(); // SoftDelete
+        // Không cho xóa admin khác
+        if ($user->role === 'admin') {
+            return redirect()->route('admin.accounts.index')
+                             ->with('error', 'Không thể xóa tài khoản Admin khác!');
+        }
+
+        $user->delete();
 
         return redirect()->route('admin.accounts.index')
                          ->with('success', 'Đã xóa tài khoản thành công!');
     }
 
-    // Bật / Tắt trạng thái tài khoản
     public function toggleStatus(User $user)
     {
         if ($user->id === auth()->id()) {
             return redirect()->route('admin.accounts.index')
                              ->with('error', 'Bạn không thể khóa tài khoản của chính mình!');
+        }
+
+        // Không cho khóa admin khác
+        if ($user->role === 'admin') {
+            return redirect()->route('admin.accounts.index')
+                             ->with('error', 'Không thể khóa tài khoản Admin khác!');
         }
 
         $user->update([

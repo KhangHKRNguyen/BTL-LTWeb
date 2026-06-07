@@ -39,14 +39,14 @@ class AssignmentController extends Controller
             'course_class_id' => ['required', 'exists:course_classes,id'],
             'title' => ['required', 'string', 'max:255'],
             'content' => ['nullable', 'string'],
-            'type' => ['required', Rule::in(['quiz', 'essay'])],
+            'type' => ['required', Rule::in(['Trắc nghiệm', 'Tự luận'])],
             'open_time' => ['nullable', 'date', 'before:due_time'],
             'due_time' => ['required', 'date', 'after:now'],
             'attachment' => ['nullable', 'file', 'max:10240'],
             'import_file' => ['nullable', 'file', 'max:5120'],
         ];
 
-        if ($request->input('type') === 'quiz' && ! $request->hasFile('import_file')) {
+        if ($request->input('type') === 'Trắc nghiệm' && ! $request->hasFile('import_file')) {
             $rules = array_merge($rules, [
                 'questions' => ['required', 'array', 'min:1'],
                 'questions.*.question_text' => ['required', 'string'],
@@ -58,7 +58,7 @@ class AssignmentController extends Controller
             ]);
         }
 
-        if ($request->input('type') === 'essay') {
+        if ($request->input('type') === 'Tự luận') {
             $rules['content'] = ['required', 'string'];
         }
 
@@ -67,7 +67,7 @@ class AssignmentController extends Controller
         $this->authorizeClass($courseClass);
 
         $questions = [];
-        if ($validated['type'] === 'quiz') {
+        if ($validated['type'] === 'Trắc nghiệm') {
             $questions = $request->hasFile('import_file')
                 ? $excelImportService->importQuestions($request->file('import_file'))
                 : array_values($validated['questions']);
@@ -116,6 +116,76 @@ class AssignmentController extends Controller
         return view('teacher.assignments.show', compact('assignment'));
     }
 
+    public function parseImport(Request $request, ExcelImportService $excelImportService)
+    {
+        try {
+            $request->validate([
+                'import_file' => ['required', 'file', 'max:5120'],
+            ]);
+            
+            $questions = $excelImportService->importQuestions($request->file('import_file'));
+            
+            return response()->json([
+                'success' => true,
+                'questions' => $questions,
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->validator->errors()->first('import_file'),
+            ], 422);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Lỗi xử lý file hoặc cấu trúc Excel/CSV không đúng định dạng mẫu.',
+            ], 500);
+        }
+    }
+
+    public function export(Assignment $assignment)
+    {
+        $this->authorizeAssignment($assignment);
+        
+        $questions = $assignment->questions()->get();
+        
+        $csvContent = "\xEF\xBB\xBF"; // UTF-8 BOM for Excel compatibility
+        $csvContent .= "question_text,option_a,option_b,option_c,option_d,correct_option\n";
+        
+        foreach ($questions as $question) {
+            $text = str_replace('"', '""', $question->question_text);
+            $a = str_replace('"', '""', $question->option_a);
+            $b = str_replace('"', '""', $question->option_b);
+            $c = str_replace('"', '""', $question->option_c);
+            $d = str_replace('"', '""', $question->option_d);
+            $correct = $question->correct_option;
+            
+            $csvContent .= "\"{$text}\",\"{$a}\",\"{$b}\",\"{$c}\",\"{$d}\",\"{$correct}\"\n";
+        }
+        
+        $filename = "danh_sach_cau_hoi_" . \Illuminate\Support\Str::slug($assignment->title) . ".csv";
+        
+        return response($csvContent, 200, [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => "attachment; filename=\"{$filename}\"",
+        ]);
+    }
+
+    public function downloadAttachment(Assignment $assignment)
+    {
+        $this->authorizeAssignment($assignment);
+        
+        if (!$assignment->file_path || !\Illuminate\Support\Facades\Storage::disk('public')->exists($assignment->file_path)) {
+            return redirect()->back()->with('error', 'Không tìm thấy file đề bài đính kèm.');
+        }
+        
+        $pathInfo = pathinfo($assignment->file_path);
+        $extension = $pathInfo['extension'] ?? 'bin';
+        
+        $filename = "de_bai_" . \Illuminate\Support\Str::slug($assignment->title) . "." . $extension;
+        
+        return \Illuminate\Support\Facades\Storage::disk('public')->download($assignment->file_path, $filename);
+    }
+
     public function template(ExcelImportService $excelImportService)
     {
         return response($excelImportService->sampleCsvContent(), 200, [
@@ -147,5 +217,18 @@ class AssignmentController extends Controller
             $courseClass->users()->where('users.id', Auth::id())->exists(),
             403
         );
+    }
+    public function toggleVisibility(Assignment $assignment)
+    {
+        $this->authorizeAssignment($assignment);
+
+        // Đảo ngược trạng thái hiện tại
+        $assignment->update([
+            'is_visible' => !$assignment->is_visible
+        ]);
+
+        $statusLabel = $assignment->is_visible ? 'hiển thị' : 'ẩn';
+
+        return redirect()->back()->with('success', "Đã chuyển bài tập sang trạng thái: " . mb_ucfirst($statusLabel));
     }
 }

@@ -3,13 +3,29 @@
         <div class="flex flex-col md:flex-row gap-6"> 
             <div class="flex-1 bg-white p-6 rounded-xl shadow-sm border border-gray-200">
                 <div class="container mt-2">
-                    
-                    <div class="pb-4 mb-6 border-b border-gray-100">
-                        <h1 class="text-2xl font-bold text-gray-800 flex items-center">
-                            <span class="me-2"></span> Tài liệu học tập
+                    <div class="pb-4 mb-6 border-b border-gray-100 flex flex-row justify-between items-center gap-4">
+                        
+                        <h1 class="text-2xl font-bold text-gray-800 flex items-center m-0">
+                            <span class="me-2">📚</span> Tài liệu học tập
                         </h1>
-                    </div>
 
+                        <div class="w-72 flex items-center gap-2">
+                            <label for="class_filter" class="shrink-0 text-xs font-semibold text-gray-500 uppercase tracking-wider">Lọc theo lớp:</label>
+                            
+                            <select id="class_filter" 
+                                    class="block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm text-sm bg-white"
+                                    onchange="window.location.href = this.value;">
+                                <option value="{{ route('student.study.index') }}">--- Tất cả lớp học ---</option>
+                                @foreach($filterClasses as $class)
+                                    <option value="{{ route('student.study.index', ['class_id' => $class->id]) }}"
+                                            @selected(request('class_id') == $class->id)>
+                                        {{ $class->class_name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                    </div>
                     <div class="space-y-6">
                         @forelse($classes as $class)
                             <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">

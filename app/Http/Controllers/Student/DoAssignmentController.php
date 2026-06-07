@@ -14,7 +14,7 @@ class DoAssignmentController extends Controller
     /**
      * Danh sách bài tập
      */
-    public function index()
+    public function index(Request $request)
     {
         // Lấy danh sách lớp của học viên
         $classIds = auth()->user()->courseClasses()->pluck('course_classes.id');
@@ -25,16 +25,21 @@ class DoAssignmentController extends Controller
                 ->where('user_id', auth()->id())
                 ->pluck('course_class_id');
         }
-
+$studentClasses = \App\Models\CourseClass::whereIn('id', $classIds)->get();
         // Lấy danh sách assignments của các lớp
-        $assignments = Assignment::whereIn('course_class_id', $classIds)
+        $query = Assignment::whereIn('course_class_id', $classIds)
+            ->where('is_visible', true)
             ->with(['courseClass', 'submissions' => function($q) {
                 $q->where('user_id', auth()->id());
-            }])
-            ->orderBy('due_time', 'asc')
-            ->get();
+            }]);
+            if ($request->has('class_id') && $request->class_id != '') {
+            $query->where('course_class_id', $request->class_id);
+        }
 
-        return view('student.assignments.index', compact('assignments'));
+        // 5. Sắp xếp và lấy ra danh sách bài tập sau khi lọc
+        $assignments = $query->orderBy('due_time', 'asc')->get();
+
+        return view('student.assignments.index', compact('assignments','studentClasses'));
     }
 
     /**
@@ -43,6 +48,10 @@ class DoAssignmentController extends Controller
     public function show($assignmentId)
     {
         $assignment = Assignment::with(['questions', 'courseClass'])->findOrFail($assignmentId);
+
+        if (!$assignment->is_visible) {
+            abort(404, 'Bài tập này đã bị giáo viên ẩn hoặc không tồn tại.');
+        }
 
         // Kiểm tra học viên có quyền làm bài này không
         $userClassIds = auth()->user()->courseClasses()->pluck('course_classes.id');
@@ -68,8 +77,20 @@ class DoAssignmentController extends Controller
             ->with('studentAnswers')
             ->first();
 
-        return view('student.assignments.do', compact('assignment', 'submission'));
+        $isOverdue = now() > $assignment->due_time;
+
+        return view('student.assignments.do', compact('assignment', 'submission', 'isOverdue'));
     }
+
+  public function viewFile(Submission $submission)
+{
+    if (!$submission->file_path) {
+        abort(404);
+    }
+
+    return Storage::disk('local')
+        ->response($submission->file_path);
+}
 
     /**
      * Lưu bài nộp
@@ -77,27 +98,61 @@ class DoAssignmentController extends Controller
     public function store(Request $request, $assignmentId)
     {
         $assignment = Assignment::findOrFail($assignmentId);
+        if (!$assignment->is_visible) {
+            abort(404, 'Bài tập này đã bị ẩn, bạn không thể nộp bài.');
+        }
+        $isOverdue = now() > $assignment->due_time;
 
         // Validate theo loại bài tập
         if ($assignment->type === 'Trắc nghiệm') {
+            // FIX: Khi hết giờ (auto-submit) → Chấp nhận partial/no answers
+            // Khi chưa hết giờ → Yêu cầu đầy đủ
+            $answerRules = $isOverdue 
+                ? 'nullable|array'  // Chấp nhận 0 answers hoặc partial
+                : 'required|array'; // Bắt buộc khi chưa hết giờ
+            
             $validated = $request->validate([
-                'answers' => 'required|array',
-                'answers.*.question_id' => 'required|exists:questions,id',
-                'answers.*.selected_option' => 'required|in:A,B,C,D'
+                'answers' => $answerRules,
+                'answers.*.question_id' => 'sometimes|required|exists:questions,id',
+                'answers.*.selected_option' => 'sometimes|required|in:A,B,C,D'
             ], [
                 'answers.required' => 'Vui lòng trả lời tất cả các câu hỏi',
                 'answers.*.selected_option.required' => 'Vui lòng chọn đáp án',
             ]);
         } else {
+    
+        if ($request->hasFile('file')) {
+   
+}
+
             // Tự luận
             $validated = $request->validate([
                 'submission_content' => 'nullable|string',
-                'file' => 'nullable|file|max:10240|mimes:pdf,doc,docx,txt,jpg,png,jpeg'
-            ], [
-                'file.max' => 'File không được vượt quá 10MB',
-                'file.mimes' => 'File phải là PDF, DOC, DOCX, TXT hoặc hình ảnh'
+                'file' => [
+    'nullable',
+    'file',
+    'max:51200'
+       ] ], [
+                'file.max' => 'File không được vượt quá 50MB',
+                'file.mimes' => 'File phải là PDF, DOCX, ZIP'
             ]);
 
+if ($request->hasFile('file')) {
+
+    $allowed = [
+        'pdf','docx','zip'
+    ];
+
+    $ext = strtolower(
+        $request->file('file')->getClientOriginalExtension()
+    );
+
+    if (!in_array($ext, $allowed)) {
+        return back()->withErrors([
+            'file' => 'Định dạng file không được hỗ trợ.'
+        ]);
+    }
+}
             // Kiểm tra ít nhất phải có 1 trong 2: nội dung hoặc file
             if (empty($validated['submission_content']) && !$request->hasFile('file')) {
                 return back()->withErrors(['submission' => 'Vui lòng nhập nội dung hoặc upload file']);
@@ -111,7 +166,7 @@ class DoAssignmentController extends Controller
                 'user_id' => auth()->id()
             ],
             [
-                'status' => 'submitted'
+                'status' => 'Đã nộp'
             ]
         );
 
@@ -128,43 +183,71 @@ class DoAssignmentController extends Controller
 
                 // Lưu file mới
                 $file = $request->file('file');
-                $filePath = $file->store('submissions/' . $assignmentId, 'private');
+                $filePath = $file->store('submissions/' . $assignmentId, 'local');
                 $submission->file_path = $filePath;
             }
 
-            $submission->status = 'submitted';
+            $submission->grade = null; // Bài tự luận để null để Thành viên 3 chấm tay sau
+            $submission->status = 'Đã nộp';
             $submission->save();
         } else {
             // TRẮC NGHIỆM: Lưu student answers
             // Xóa câu trả lời cũ nếu có
             $submission->studentAnswers()->delete();
-
+            
+            $totalQuestions = $assignment->questions->count();
+            $correctAnswersCount = 0;
+            
+            // ✅ FIX: Xử lý trường hợp không có answers (user chưa chọn gì hoặc hết giờ)
+            $answers = $validated['answers'] ?? [];
+            
             // Tạo câu trả lời mới
-            foreach ($validated['answers'] as $answer) {
-                StudentAnswer::create([
-                    'submission_id' => $submission->id,
-                    'question_id' => $answer['question_id'],
-                    'selected_option' => $answer['selected_option']
-                ]);
+            if (is_array($answers) && count($answers) > 0) {
+                foreach ($answers as $answer) {
+                    // ✅ FIX: Kiểm tra xem key tồn tại trước khi access
+                    if (!isset($answer['question_id']) || !isset($answer['selected_option'])) {
+                        continue; // Bỏ qua câu hỏi thiếu dữ liệu
+                    }
+                    
+                    $question = $assignment->questions->firstWhere('id', $answer['question_id']);
+                    $isCorrect = false;
+                    
+                    if ($question) {
+                        // So sánh trực tiếp: đáp án học viên chọn === đáp án đúng của giáo viên
+                        $isCorrect = ($answer['selected_option'] === $question->correct_option);
+                        if ($isCorrect) {
+                            $correctAnswersCount++;
+                        }
+                    }
+                    
+                    StudentAnswer::create([
+                        'submission_id' => $submission->id,
+                        'question_id' => $answer['question_id'],
+                        'selected_option' => $answer['selected_option']
+                    ]);
+                }
             }
+            // Nếu không có answers (answers = []), correctAnswersCount vẫn = 0
 
-            $submission->status = 'submitted';
+            // Tính điểm theo thang 10 và làm tròn 2 chữ số thập phân
+            // Nếu 0 câu trả lời → Score = 0/totalQuestions * 10 = 0.00
+            $score = $totalQuestions > 0 ? ($correctAnswersCount / $totalQuestions) * 10 : 0;
+            $submission->grade = round($score, 2); 
+
+            $submission->status = 'Đã chấm (Tự động)';
             $submission->save();
         }
 
-        return redirect()->route('student.assignments.index')
-            ->with('success', 'Bài tập nộp thành công!');
-    }
+      // Sau khi lưu dữ liệu vào bảng Submissions và StudentAnswers xong...
+
+if ($assignment->type === 'Trắc nghiệm') {
+    // Ở lại trang để xem ngay kết quả xanh đỏ
+    return redirect()->route('student.assignments.show', $assignment->id)
+                     ->with('success', 'Nộp bài trắc nghiệm thành công!');
+} else {
+    // Ra ngoài danh sách đối với bài tự luận
+    return redirect()->route('student.assignments.index')
+                     ->with('success', 'Nộp bài tự luận thành công! Bài làm của bạn đang chờ giáo viên chấm.');
 }
+    }}
 
-// Truy xuất danh sách bài tập được giao cho sinh viên từ database dựa trên các lớp học.
-
-// Khi sinh viên bấm "Làm bài": Controller này sẽ lấy nội dung chi tiết của đề bài (câu hỏi trắc nghiệm hoặc file đề bài tự luận) để hiển thị lên giao diện.
-
-// Khi sinh viên nộp bài: Tiếp nhận dữ liệu câu trả lời.
-
-// Nếu là trắc nghiệm: Xử lý lưu các phương án sinh viên chọn.
-
-// Nếu là tự luận: Xử lý logic upload file bài làm (validate định dạng file, kích thước file, lưu file vào thư mục lưu trữ của hệ thống).
-
-// Gọi Model StudentAnswer để ghi nhận bài nộp vào database và cập nhật trạng thái "Đã nộp".
